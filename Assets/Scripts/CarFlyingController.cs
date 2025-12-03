@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using TMPro; // TextMeshPro
+﻿using TMPro; // TextMeshPro
+using UnityEngine;
 
 public class CarFlyingController : MonoBehaviour
 {
@@ -26,6 +26,7 @@ public class CarFlyingController : MonoBehaviour
     public TMP_Text speedText; // kéo thả TextMeshPro từ Canvas
 
     private Rigidbody rb;
+    private float currentSteerAngle = 0f;
 
     private void Start()
     {
@@ -94,10 +95,6 @@ public class CarFlyingController : MonoBehaviour
             Quaternion re = Quaternion.Euler(0, input * lucReXe * Time.deltaTime, 0);
             rb.MoveRotation(rb.rotation * re);
         }
-
-        float steerAngle = input * maxSteerAngle;
-        wheelFrontLeft.localRotation = Quaternion.Euler(0, steerAngle, 0);
-        wheelFrontRight.localRotation = Quaternion.Euler(0, steerAngle, 0);
     }
 
     // ==================== BÁNH QUAY KHI XE LĂN ====================
@@ -110,6 +107,12 @@ public class CarFlyingController : MonoBehaviour
         wheelFrontRight.Rotate(rotationAngle, 0, 0);
         wheelBackLeft.Rotate(rotationAngle, 0, 0);
         wheelBackRight.Rotate(rotationAngle, 0, 0);
+
+        float targetAngle = dauVaoRe * maxSteerAngle;
+        currentSteerAngle = Mathf.Lerp(currentSteerAngle, targetAngle, Time.deltaTime * 5f);
+
+        wheelFrontLeft.localRotation = Quaternion.Euler(0, currentSteerAngle, 0);
+        wheelFrontRight.localRotation = Quaternion.Euler(0, currentSteerAngle, -180);
     }
 
     // ==================== HIỂN THỊ TỐC ĐỘ UI ====================
