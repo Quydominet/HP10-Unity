@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Car : MonoBehaviour
+public class giatoc : MonoBehaviour
 {
     [Header("Tăng tốc")]
     [SerializeField] private float giaToc = 25f;       // lực tăng tốc
