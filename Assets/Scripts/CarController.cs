@@ -1,31 +1,18 @@
-//using UnityEngine;
+using UnityEngine;
 
-//public class CarController : MonoBehaviour
-//{
-//    [Header("Car Settings")]
-//    [SerializeField] private float SpeedForce = 100f;
-//    [SerializeField] private float TurnForce = 100f;
-//    [SerializeField] private float BrakeForce = 50f;
-//    [SerializeField] private GameObject BrakeEffect;
+public class CarController : MonoBehaviour
+{
+    [Header("Car Settings")]
+    [SerializeField] private float SpeedForce = 100f;
+    [SerializeField] private float TurnForce = 100f;
+    [SerializeField] private float BrakeForce = 50f;
+    [SerializeField] private GameObject BrakeEffect;
 
-//    [Header("Ground Check Settings")]
-//    [SerializeField] private Transform groundCheckPoint; // empty GameObject under car
-//    [SerializeField] private float groundCheckRadius = 0.5f;
-//    [SerializeField] private LayerMask groundLayer;
+    [Header("Ground Check Settings")]
+    [SerializeField] private Transform groundCheckPoint; // empty GameObject under car
+    [SerializeField] private float groundCheckRadius = 0.5f;
+    [SerializeField] private LayerMask groundLayer;
 
-<<<<<<< Updated upstream
-//    [HideInInspector] public float MoveInput;
-//    [HideInInspector] public float TurnInput;
-//    private Rigidbody rb;
-//    [SerializeField] private bool controlled = false;
-//    private bool isGrounded = false;
-
-//    private void Start()
-//    {
-//        rb = GetComponent<Rigidbody>();
-//        controlled = (transform.tag == "Player");
-//    }
-=======
     [HideInInspector] public float MoveInput;
     [HideInInspector] public float TurnInput;
     [SerializeField] private bool controlled = false;
@@ -46,43 +33,25 @@
         wheels[2] = transform.Find("RFwheel").GetComponent<WheelCollider>();
         wheels[3] = transform.Find("LFwheel").GetComponent<WheelCollider>();
     }
->>>>>>> Stashed changes
+private void FixedUpdate()
+{
+    // Inputs
+    if (controlled)
+    {
+        MoveInput = Input.GetAxis("Vertical");
+        TurnInput = Input.GetAxis("Horizontal");
+    }
 
-//    private void FixedUpdate()
-//    {
-//        // Inputs
-//        if (controlled)
-//        {
-//            MoveInput = Input.GetAxis("Vertical");
-//            TurnInput = Input.GetAxis("Horizontal");
-//        }
+    // Ground check
+    isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
 
-//        // Ground check
-//        isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
+    // Only allow control if grounded
+    if (isGrounded)
+    {
+        Move();
+        Turn();
 
-//        // Only allow control if grounded
-//        if (isGrounded)
-//        {
-//            Move();
-//            Turn();
-
-<<<<<<< Updated upstream
-//            if (MoveInput > 0 && Input.GetKey(KeyCode.Space)) Brake();
-//        }
-//        else
-//        {
-//            // In air: keep momentum, no new forces
-//            //BrakeEffect.SetActive(false);
-//        }
-//    }
-
-//    public void Move()
-//    {
-//        rb.AddRelativeForce(Vector3.forward * MoveInput * SpeedForce);
-//        //BrakeEffect.SetActive(false);
-//    }
-=======
-            if (MoveInput > 0 && Input.GetKey(KeyCode.Space)) Brake();
+        if (MoveInput > 0 && Input.GetKey(KeyCode.Space)) Brake();
         }
         else
         {
@@ -118,20 +87,19 @@
         //rb.AddRelativeForce(Vector3.forward * MoveInput * SpeedForce);
         //BrakeEffect.SetActive(false);
     }
->>>>>>> Stashed changes
 
-//    public void Turn()
-//    {
-//        Quaternion re = Quaternion.Euler(Vector3.up * TurnInput * TurnForce * Time.deltaTime);
-//        rb.MoveRotation(rb.rotation * re);
-//    }
+    public void Turn()
+    {
+        Quaternion re = Quaternion.Euler(Vector3.up * TurnInput * TurnForce * Time.deltaTime);
+        rb.MoveRotation(rb.rotation * re);
+    }
 
-//    public void Brake()
-//    {
-//        if (rb.linearVelocity.z != 0)
-//        {
-//            rb.AddRelativeForce(-Vector3.forward * BrakeForce);
-//            //BrakeEffect.SetActive(true);
-//        }
-//    }
-//}
+    public void Brake()
+    {
+        if (rb.linearVelocity.z != 0)
+        {
+            rb.AddRelativeForce(-Vector3.forward * BrakeForce);
+            //BrakeEffect.SetActive(true);
+        }
+    }
+}
