@@ -64,21 +64,31 @@ private void FixedUpdate()
 
     public void SetWheel()
     {
-        for (int wheel = 0; wheel < wheels.Length; wheel++)
+        for (int i = 0; i < wheels.Length; i++)
         {
             Vector3 pos;
             Quaternion rot;
 
-            wheels[wheel].motorTorque = MoveInput * SpeedForce;
-            wheels[wheel].GetWorldPose(out pos, out rot);
+            wheels[i].motorTorque = MoveInput * SpeedForce;
+            wheels[i].GetWorldPose(out pos, out rot);
 
-            GameObject Mesh = wheels[wheel].gameObject;
-            Mesh = Mesh.transform.GetChild(0).gameObject;
+            GameObject wheelMesh = wheels[i].transform.GetChild(0).gameObject;
+            wheelMesh.transform.position = pos;
 
-            Mesh.transform.position = pos;
+            Quaternion wheelRotation = rot;
+            
+            if (i > 1)
+            {
+                Quaternion steerRotation = Quaternion.Euler(0, 20 * TurnInput, 0);
+                wheelRotation = steerRotation * wheelRotation;
+            }
 
-            if (wheel % 2 != 0) rot *= Quaternion.Euler(0, 180, 0);
-            Mesh.transform.rotation = rot;
+            if (i % 2 != 0)
+            {
+                wheelRotation *= Quaternion.Euler(0, 180, 0);
+            }
+
+            wheelMesh.transform.rotation = wheelRotation;
         }
     }
 
@@ -98,7 +108,7 @@ private void FixedUpdate()
     {
         if (rb.linearVelocity.z != 0)
         {
-            rb.AddRelativeForce(-Vector3.forward * BrakeForce);
+            rb.AddRelativeForce(-Vector3.forward);
             //BrakeEffect.SetActive(true);
         }
     }

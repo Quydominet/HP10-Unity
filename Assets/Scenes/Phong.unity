@@ -1141,12 +1141,12 @@ Camera:
   m_ShutterSpeed: 0.005
   m_Aperture: 16
   m_FocusDistance: 10
-  m_FocalLength: 50
+  m_FocalLength: 13.858139
   m_BladeCount: 5
   m_Curvature: {x: 2, y: 11}
   m_BarrelClipping: 0.25
   m_Anamorphism: 0
-  m_SensorSize: {x: 36, y: 24}
+  m_SensorSize: {x: 21.946, y: 16.002}
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
@@ -1159,7 +1159,7 @@ Camera:
   field of view: 60.000004
   orthographic: 0
   orthographic size: 5
-  m_Depth: -1
+  m_Depth: 1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1213,10 +1213,10 @@ MonoBehaviour:
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
-  m_Antialiasing: 0
+  m_Antialiasing: 2
   m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
+  m_StopNaN: 1
+  m_Dithering: 1
   m_ClearDepth: 1
   m_AllowXRRendering: 1
   m_AllowHDROutput: 1
@@ -5359,7 +5359,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d133bb8ca4f5354594508240989e8e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  torqueStrength: 0.8
+  torqueStrength: 0.3
   damping: 10
 --- !u!114 &1760407436
 MonoBehaviour:
@@ -5408,7 +5408,7 @@ MonoBehaviour:
   Damage: 1
   Cooldown: 0.01
   Range: 100
-  SpreadAngle: 10
+  SpreadAngle: 5
   RayMode: 1
   firing: 0
 --- !u!114 &1760407439
@@ -7231,7 +7231,7 @@ GameObject:
   - component: {fileID: 6383362012434431838}
   - component: {fileID: 6383362012434431843}
   m_Layer: 0
-  m_Name: Car
+  m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7427,10 +7427,10 @@ MonoBehaviour:
   ProjectileObject: {fileID: 0}
   RayObject: {fileID: 3187255057432103852, guid: e73c59ecbf9fc1f48b4b25a042a3a2f8, type: 3}
   BarrelPos: {fileID: 466349542}
-  Damage: 1
+  Damage: 2
   Cooldown: 0.01
   Range: 100
-  SpreadAngle: 10
+  SpreadAngle: 8
   RayMode: 1
   firing: 0
 --- !u!114 &6383362012434431837
@@ -7474,7 +7474,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d133bb8ca4f5354594508240989e8e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  torqueStrength: 0.8
+  torqueStrength: 0.3
   damping: 10
 --- !u!4 &6500972350378472786
 Transform:
