@@ -4,8 +4,8 @@ using UnityEngine.UIElements;
 public class Health : MonoBehaviour
 {
     [SerializeField] private float MaxHealth = 100;
+    [SerializeField] private Collider Collider;
     private float CurrentHealth = 100;
-    private Collider Collider;
     private CarExplosionEffect ExplosionEffect;
 
     void Start()

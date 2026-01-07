@@ -72,7 +72,7 @@ public class Projectile : MonoBehaviour
 
         RaycastHit hitInfo;
 
-        bool hit = Physics.Raycast(ray, out hitInfo, Range, ~0, QueryTriggerInteraction.Ignore);
+        bool hit = Physics.Raycast(ray, out hitInfo, Range, ~0, QueryTriggerInteraction.Collide);
 
         // Determine hit point
         Vector3 hitPoint = hit ? hitInfo.point : ray.origin + ray.direction * Range;
