@@ -6,11 +6,14 @@ TagManager:
   tags:
   - Ground
   - NPC
+  - StartObject
+  - TeleporterObject
+  - AntiCheeseObject
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Mesh
   - Water
   - UI
   - 

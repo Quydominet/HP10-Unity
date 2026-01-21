@@ -72,7 +72,7 @@ public class Projectile : MonoBehaviour
 
         RaycastHit hitInfo;
 
-        bool hit = Physics.Raycast(ray, out hitInfo, Range, ~0, QueryTriggerInteraction.Ignore);
+        bool hit = Physics.Raycast(ray, out hitInfo, Range, ~0, QueryTriggerInteraction.Collide);
 
         // Determine hit point
         Vector3 hitPoint = hit ? hitInfo.point : ray.origin + ray.direction * Range;
@@ -80,12 +80,12 @@ public class Projectile : MonoBehaviour
         // Apply damage if hit
         if (hitInfo.collider != null)
         {
-            hitInfo.transform.SendMessage("TakeDamage", Damage, SendMessageOptions.DontRequireReceiver);
+            //hitInfo.transform.SendMessage("TakeDamage", (gameObject, Damage), SendMessageOptions.DontRequireReceiver);
 
             Health health = hitInfo.transform.GetComponent<Health>();
             MeshDamageAPI damage = hitInfo.transform.GetComponent<MeshDamageAPI>();
 
-            if (health != null) health.TakeDamage(Damage);
+            if (health != null) health.TakeDamage(gameObject, Damage);
             if (damage != null) damage.ApplyDent(hitInfo.point, hitInfo.normal, Damage);
         }
 

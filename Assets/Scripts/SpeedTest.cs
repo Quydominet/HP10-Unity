@@ -10,8 +10,8 @@ public class SpeedText : MonoBehaviour
     void Start()
     {
         speedText = GetComponent<TextMeshProUGUI>();
-        if (carController == null)
-            Debug.LogError("Chưa gán CarController!");
+        //if (carController == null)
+            //Debug.LogError("Chưa gán CarController!");
     }
 
     void Update()

@@ -20,6 +20,8 @@ public class GyroBalancePhysics : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (!this.enabled) return;
+
         // Target upright rotation (keep Y free)
         Quaternion targetRotation = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, 0f);
 

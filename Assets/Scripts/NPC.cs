@@ -43,9 +43,9 @@ public class CarNPC : MonoBehaviour
                 : 0f;
             car.MoveInput = move;
 
-            // Snap rotation toward desired direction (only Y axis)
+
             Quaternion targetRot = Quaternion.LookRotation(desiredDir, Vector3.up);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, Time.deltaTime * turnSpeed);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, Time.deltaTime * turnSpeed * 0.5f);
 
             // --- Cone check for firing ---
             Vector3 toTarget = (target.position - transform.position).normalized;

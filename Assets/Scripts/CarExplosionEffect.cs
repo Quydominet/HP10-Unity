@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using Unity.Mathematics;
+using Unity.Mathematics.Geometry;
 using UnityEngine;
 public class CarExplosionEffect : MonoBehaviour
 {
@@ -24,7 +27,18 @@ public class CarExplosionEffect : MonoBehaviour
             renderer.material = burntMaterial;
         }
 
+        Rigidbody rb = GetComponent<Rigidbody>();
+
+        if (rb != null)
+        {
+            Vector3 explosionForce = new Vector3(UnityEngine.Random.Range(-100, 100), 500f, UnityEngine.Random.Range(-100, 100));
+            rb.AddForce(explosionForce);
+            
+            Vector3 spinTorque = new Vector3(UnityEngine.Random.Range(-500, 500), UnityEngine.Random.Range(-500, 500), 0f);
+            rb.AddTorque(spinTorque);
+        }
+
         // Start smoke effect
-       // smokeEffect.Play();
+        // smokeEffect.Play();
     }
 }
