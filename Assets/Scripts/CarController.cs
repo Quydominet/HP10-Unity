@@ -13,8 +13,8 @@ public class CarController : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.5f;
     [SerializeField] private LayerMask groundLayer;
 
-    [HideInInspector] public float MoveInput;
-    [HideInInspector] public float TurnInput;
+    [HideInInspector] public float MoveInput = 0;
+    [HideInInspector] public float TurnInput = 0;
     [SerializeField] private bool controlled = false;
 
     WheelCollider[] wheels;
@@ -100,7 +100,9 @@ private void FixedUpdate()
 
     public void Turn()
     {
-        Quaternion re = Quaternion.Euler(Vector3.up * TurnInput * TurnForce * Time.deltaTime);
+        float speed = rb.linearVelocity.normalized.magnitude;
+
+        Quaternion re = Quaternion.Euler(Vector3.up * (TurnInput * speed) * TurnForce * Time.deltaTime);
         rb.MoveRotation(rb.rotation * re);
     }
 

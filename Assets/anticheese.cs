@@ -6,7 +6,7 @@ public class AntiCheeseTrigger : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        FindObjectOfType<NextScene>().AntiCheeseTouched();
+        FindFirstObjectByType<NextScene>().AntiCheeseTouched();
         Debug.Log("YURI");
     }
 }

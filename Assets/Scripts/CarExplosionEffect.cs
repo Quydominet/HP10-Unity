@@ -27,7 +27,7 @@ public class CarExplosionEffect : MonoBehaviour
             renderer.material = burntMaterial;
         }
 
-        Rigidbody rb = FindFirstObjectByType<Rigidbody>();
+        Rigidbody rb = GetComponent<Rigidbody>();
 
         if (rb != null)
         {
