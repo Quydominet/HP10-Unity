@@ -52,8 +52,8 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(GameObject source, float damage)
     {
-        print("Taking Damage: " + damage);
-        print("Damage Source: " + source.name);
+        //print("Taking Damage: " + damage);
+        //print("Damage Source: " + source.name);
         CurrentHealth -= damage;
         CurrentHealth = Mathf.Clamp(CurrentHealth, 0, MaxHealth);
 

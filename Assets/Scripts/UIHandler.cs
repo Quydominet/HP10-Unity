@@ -1,5 +1,8 @@
-﻿using UnityEngine;
+﻿using System.Threading.Tasks;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class UIHandler : MonoBehaviour
 {
@@ -11,6 +14,10 @@ public class UIHandler : MonoBehaviour
     [Header("Radar Settings")]
     public float radarRange = 50f;
     public float radarSize = 156f;
+
+    [Header("Weapon Settings")]
+    [SerializeField] private RectTransform AmmoIconPrefab;
+    public Projectile DisplayedWeapon;
 
     [Header("Targets")]
     public Transform[] targets;             // World objects to track
@@ -31,6 +38,8 @@ public class UIHandler : MonoBehaviour
 
     // Weapon Frame
     private Transform WeaponFrame;
+    private Transform AmmoContainer;
+
     // Code
     void RenewBlips()
     {
@@ -55,6 +64,7 @@ public class UIHandler : MonoBehaviour
         BlipContainer = Radar.Find("BlipContainer");
 
         WeaponFrame = PlayerUI.transform.Find("Weapon");
+        AmmoContainer = WeaponFrame.Find("AmmoContainer");
         RenewBlips();
     }
     void UpdateHealth()
@@ -100,9 +110,76 @@ public class UIHandler : MonoBehaviour
             UpdateBlip(targets[i], blips[i]);
         }
     }
+    private IEnumerator FlashImage(Image img)
+    {
+        Color oldC = img.color;
+        Color newC = oldC;
+        newC.a = 0f;
+
+        img.color = newC;                // transparent
+        yield return new WaitForSeconds(0.1f); // wait 100 ms
+        img.color = oldC;                // restore
+    }
+    public void FlashInfiniteAmmoIcon()
+    {
+        if (AmmoContainer.childCount <= 1) return;
+
+        Image firstImage = AmmoContainer.GetChild(0).GetComponent<Image>();
+        StartCoroutine(FlashImage(firstImage));
+    }
+    void UpdateAmmo()
+    {
+        if (DisplayedWeapon == null) return;
+        int currentAmmo = DisplayedWeapon.GetAmmo();
+        int maxAmmo = DisplayedWeapon.GetMaxAmmo();
+
+        if (maxAmmo != AmmoContainer.childCount)
+        {
+            // Update count
+            foreach (Transform child in AmmoContainer)
+            {
+                Destroy(child.gameObject);
+            }
+
+            if (maxAmmo == int.MaxValue)
+            {
+                RectTransform ammoIcon = Instantiate(AmmoIconPrefab, AmmoContainer);
+                ammoIcon.name = "0";
+            }
+            else
+            {
+                for (int i = 0; i < maxAmmo; i++)
+                {
+                    RectTransform ammoIcon = Instantiate(AmmoIconPrefab, AmmoContainer);
+                    ammoIcon.name = i.ToString();
+                }
+            }
+        }
+        else
+        {
+            if (maxAmmo != int.MaxValue)
+            {
+                for (int i = 0; i < maxAmmo; i++)
+                {
+                    Transform AmmoObject = AmmoContainer.Find(i.ToString());
+                    if (AmmoObject == null) continue;
+                    Image ammoImage = AmmoObject.GetComponent<Image>();
+                    Color newC = ammoImage.color;
+
+                    if (i < currentAmmo)
+                        newC.a = 1f;
+                    else
+                        newC.a = 0f;
+
+                    ammoImage.color = newC;
+                }
+            }
+        }
+    }
     void Update()
     {
         UpdateHealth();
         UpdateRadar();
+        UpdateAmmo();
     }
 }

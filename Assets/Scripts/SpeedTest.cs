@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.XR;
 
 public class SpeedText : MonoBehaviour
 {
+    /*
     public CarFlyingController carController; // gán script xe vào đây
     private TextMeshProUGUI speedText;
 
@@ -21,4 +22,5 @@ public class SpeedText : MonoBehaviour
             speedText.text = $"{carController.tocDoHienTai:0} km/h";
         }
     }
+    */
 }
