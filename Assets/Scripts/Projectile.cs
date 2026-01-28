@@ -1,19 +1,26 @@
 using System.Collections;
 using System.Threading.Tasks;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Android;
 
 public class Projectile : MonoBehaviour
 {
-    [SerializeField] private GameObject ProjectileObject;
+    [Header("Objects")]
+    /*[SerializeField]*/ private GameObject ProjectileObject;
     [SerializeField] private GameObject RayObject;
     [SerializeField] private Transform BarrelPos;
+    [Header("Projectiles")]
     [SerializeField] private float Damage = 1;
     [SerializeField] private float Cooldown = 1;
     [SerializeField] private float Range = 15;
     [SerializeField] private float SpreadAngle = 15;
-    [SerializeField] private bool RayMode = true;
+    [Header("Ammo")]
+    [SerializeField] private int MaxAmmo = int.MaxValue;
+    [SerializeField] private float ReloadTime = 1;
+    private int CurrentAmmo = 0;
+    /*[SerializeField]*/ private bool RayMode = true;
 
     private float LastShotTime;
     private float FadeDuration = 0.1f;
@@ -51,7 +58,7 @@ public class Projectile : MonoBehaviour
         float spreadRadius = Mathf.Tan(angle/2 * Mathf.Deg2Rad);
 
         // Random offset within unit circle
-        Vector2 randomOffset = Random.insideUnitCircle * spreadRadius;
+        Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * spreadRadius;
 
         // Create spread direction
         Vector3 spreadDir = forward + BarrelPos.right * randomOffset.x + BarrelPos.up * randomOffset.y;
@@ -102,22 +109,35 @@ public class Projectile : MonoBehaviour
             StartCoroutine(FadeLine(line, newRay));
         }
     }
-
+    public int GetMaxAmmo()
+    {
+        return MaxAmmo;
+    }
+    public int GetAmmo()
+    {
+        return CurrentAmmo;
+    }
     void Start()
     {
         LastShotTime = Time.time;
         car = GetComponent<Car>();
         controlled = (transform.tag == "Player");
+        CurrentAmmo = MaxAmmo;
     }
-
-    // Update is called once per frame
     void Update()
     {
+        if (CurrentAmmo <= 0)
+        {
+            if (Time.time - LastShotTime >= ReloadTime)
+                CurrentAmmo = MaxAmmo;
+        }
+
         if ((Input.GetButton("Fire1") && controlled) || (!controlled && firing))
         {
-            if (Time.time - LastShotTime > Cooldown)
+            if ((Time.time - LastShotTime >= Cooldown) && CurrentAmmo > 0)
             {
                 LastShotTime = Time.time;
+                CurrentAmmo--;
 
                 if (ProjectileObject != null && !RayMode)
                     FireProjectile();
