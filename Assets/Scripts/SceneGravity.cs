@@ -1,12 +1,16 @@
 using UnityEngine;
 
-public class SceneGravity : MonoBehaviour
+public class GravityManager : MonoBehaviour
 {
-    void Start()
-    {
-        // Trọng lực mặc định toàn scene
-        Physics.gravity = new Vector3(0, -9.81f, 0);
+    public Vector3 gravity = new Vector3(0, -9.81f, 0);
+    public Rigidbody rb;
 
-        Debug.Log("Gravity Applied To Whole Scene!");
+    void FixedUpdate()
+    {
+        Physics.gravity = gravity;
+        Physics.gravity = new Vector3(0, -80f, 0);
+        gravity = transform.forward * 9.81f;
+        rb.AddForce(-transform.up * 50f, ForceMode.Acceleration);
+
     }
 }
