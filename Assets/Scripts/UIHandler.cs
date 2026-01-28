@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 
 public class UIHandler : MonoBehaviour
@@ -29,12 +30,17 @@ public class UIHandler : MonoBehaviour
     private Transform StatusFrame;
     private Health HealthScript;
 
+    private Transform Health;
     private Transform HealthBar;
-    private Transform Bar;
 
     private Transform Radar;
     private Transform BlipContainer;
-    private Transform RadarArrow;
+
+    private Transform Nitro;
+    private Transform NitroBar;
+
+    private Transform Speed;
+    private Transform SpeedNum;
 
     // Weapon Frame
     private Transform WeaponFrame;
@@ -56,12 +62,17 @@ public class UIHandler : MonoBehaviour
         StatusFrame = PlayerUI.transform.Find("Status");
         HealthScript = gameObject.GetComponent<Health>();
 
-        HealthBar = StatusFrame.Find("Health");
-        Bar = HealthBar.Find("Bar");
+        Health = StatusFrame.Find("Health");
+        HealthBar = Health.Find("Bar");
+
+        Nitro = StatusFrame.Find("Nitro");
+        NitroBar = Nitro.Find("Bar");
 
         Radar = StatusFrame.Find("Radar");
-        RadarArrow = Radar.Find("PlayerArrow");
         BlipContainer = Radar.Find("BlipContainer");
+
+        Speed = StatusFrame.Find("Speed");
+        SpeedNum = Speed.Find("Number");
 
         WeaponFrame = PlayerUI.transform.Find("Weapon");
         AmmoContainer = WeaponFrame.Find("AmmoContainer");
@@ -71,14 +82,14 @@ public class UIHandler : MonoBehaviour
     {
         float healthPercent = HealthScript.GetHealth() / HealthScript.GetMaxHealth();
 
-        Bar.GetComponent<RectTransform>().localScale = new Vector3(healthPercent, 1, 1);
-        Bar.GetComponent<Image>().color = Color.Lerp(
+        HealthBar.GetComponent<RectTransform>().localScale = new Vector3(healthPercent, 1, 1);
+        HealthBar.GetComponent<Image>().color = Color.Lerp(
             new Color(128f / 255f, 38f / 255f, 38f / 255f),   // dark red
             new Color(47f / 255f, 128f / 255f, 38f / 255f),   // green
             healthPercent                             // 0 → red, 1 → green
         );
 
-        HealthBar.GetComponent<Image>().color = Color.Lerp(
+        Health.GetComponent<Image>().color = Color.Lerp(
             new Color(63f / 255f, 19f / 255f, 19f / 255f),   // dark red
             new Color(37f / 255f, 71f / 255f, 38f / 255f),   // green
             healthPercent                             // 0 → red, 1 → green
@@ -176,10 +187,29 @@ public class UIHandler : MonoBehaviour
             }
         }
     }
+    /*
+    void UpdateNitro()
+    {
+        Car car = gameObject.GetComponent<Car>();
+        if (car == null) return;
+        float nitroPercent = car.GetNitro() / car.GetMaxNitro();
+        NitroBar.GetComponent<RectTransform>().localScale = new Vector3(nitroPercent, 1, 1);
+    }
+    */
+    void UpdateSpeed()
+    {
+        float speed = gameObject.GetComponent<Rigidbody>().linearVelocity.magnitude;
+        TextMeshProUGUI text = SpeedNum.GetComponent<TextMeshProUGUI>();
+        if (text == null) return;
+
+        text.text = $"{Mathf.RoundToInt(speed)}";
+    }
     void Update()
     {
         UpdateHealth();
+        //UpdateNitro();
         UpdateRadar();
         UpdateAmmo();
+        UpdateSpeed();
     }
 }
