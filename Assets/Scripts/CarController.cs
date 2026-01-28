@@ -3,7 +3,7 @@ using UnityEngine;
 public class CarController : MonoBehaviour
 {
     [Header("Car Settings")]
-    [SerializeField] private float SpeedForce = 100f;
+    public float SpeedForce = 100f;
     [SerializeField] private float TurnForce = 100f;
     [SerializeField] private float BrakeForce = 50f;
     [SerializeField] private GameObject BrakeEffect;

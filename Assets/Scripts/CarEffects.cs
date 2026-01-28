@@ -35,17 +35,12 @@ public class CarEffects : MonoBehaviour
 
     IEnumerator NitroRoutine(float duration)
     {
-        float oldSpeed = car.SpeedMultiplier;
-        float oldMaxSpeed = car.MaxSpeedMultiplier;
-
-        car.SpeedMultiplier = nitroMultiplier;
-        car.MaxSpeedMultiplier = nitroMultiplier;
+        float oldSpeed = car.SpeedForce;
+        car.SpeedForce = nitroMultiplier;
 
         yield return new WaitForSeconds(duration);
 
-        car.SpeedMultiplier = oldSpeed;
-        car.MaxSpeedMultiplier = oldMaxSpeed;
-
+        car.SpeedForce = oldSpeed;
         nitroCoroutine = null;
     }
 
