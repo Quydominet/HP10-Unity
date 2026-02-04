@@ -1,12 +1,27 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CarController : MonoBehaviour
 {
     [Header("Car Settings")]
     public float SpeedForce = 100f;
+    readonly public float NitrousForce = 10f;
+    readonly public float NitrousCapacity = 5f;
+
+    [Header("Nitrous Settings")]
+    [Tooltip("Maximum number of stacked nitro presses")]
+    readonly public int MaxNitrousStage = 4;
+    [Tooltip("Additional force per extra stage (e.g. 0.5 = +50% per stage)")]
+    readonly public float NitrousStageMultiplier = 0.25f;
+
     [SerializeField] private float TurnForce = 100f;
     [SerializeField] private float BrakeForce = 50f;
     [SerializeField] private GameObject BrakeEffect;
+
+    public float CurrentNitrous;
+
+    private int CurrentNitrousStage = 0;
+    private bool NitrousActive = false;
 
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint; // empty GameObject under car
@@ -20,7 +35,7 @@ public class CarController : MonoBehaviour
     WheelCollider[] wheels;
 
     private Rigidbody rb;
-    private bool isGrounded = false;
+    public bool isGrounded = false;
 
     private void Awake()
     {
@@ -32,33 +47,38 @@ public class CarController : MonoBehaviour
         wheels[1] = transform.Find("LBwheel").GetComponent<WheelCollider>();
         wheels[2] = transform.Find("RFwheel").GetComponent<WheelCollider>();
         wheels[3] = transform.Find("LFwheel").GetComponent<WheelCollider>();
+
+        CurrentNitrous = NitrousCapacity;
     }
-private void FixedUpdate()
-{
-    // Inputs
-    if (controlled)
+    private void FixedUpdate()
     {
-        MoveInput = Input.GetAxis("Vertical");
-        TurnInput = Input.GetAxis("Horizontal");
-    }
-
-    // Ground check
-    isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
-
-    // Only allow control if grounded
-    if (isGrounded)
-    {
-        Move();
-        Turn();
-
-        if (MoveInput > 0 && Input.GetKey(KeyCode.Space)) Brake();
-        }
-        else
+        // Inputs
+        if (controlled)
         {
-            // In air: keep momentum, no new forces
-            //BrakeEffect.SetActive(false);
+            MoveInput = Input.GetAxis("Vertical");
+            TurnInput = Input.GetAxis("Horizontal");
         }
 
+        // Ground check
+        isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
+
+        // Only allow control if grounded
+        if (isGrounded)
+        {
+            Move();
+            Turn();
+
+            if (MoveInput > 0 && Input.GetKey(KeyCode.Space))
+                Brake();
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && CurrentNitrous > 0f)
+        {
+            CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
+            NitrousActive = true;
+        }
+
+        ApplyNitrous();
         SetWheel();
     }
 
@@ -92,15 +112,52 @@ private void FixedUpdate()
         }
     }
 
+    private float CalculatedNitroForce;
+
+    public void ApplyNitrous()
+    {
+        if (!NitrousActive && CurrentNitrous < NitrousCapacity)
+        {
+            CurrentNitrous += Time.deltaTime;
+            CurrentNitrous = Mathf.Min(CurrentNitrous, NitrousCapacity);
+
+            return;
+        }
+
+        float speed = rb.linearVelocity.normalized.magnitude;
+        float stageMultiplier = 1f + (CurrentNitrousStage - 1) * NitrousStageMultiplier;
+
+        CalculatedNitroForce = speed * NitrousForce * stageMultiplier;
+
+        float consumptionThisFrame = (1 + stageMultiplier) * Time.deltaTime;
+        CurrentNitrous = Mathf.Max(0, CurrentNitrous - consumptionThisFrame);
+
+        if (CurrentNitrous <= 0f)
+        {
+            NitrousActive = false;
+            CurrentNitrousStage = 0;
+        }
+    }
+
     public void Move()
     {
-        //rb.AddRelativeForce(Vector3.forward * MoveInput * SpeedForce);
+        Vector3 MoveForce = Vector3.forward * MoveInput * (SpeedForce + CalculatedNitroForce);
+
+        if (MoveInput < 0)
+        {
+            MoveForce *= 0.4f;
+        }
+
+        rb.AddRelativeForce(MoveForce);
+
         //BrakeEffect.SetActive(false);
     }
 
     public void Turn()
     {
         float speed = rb.linearVelocity.normalized.magnitude;
+
+        if (speed <= 0.01f) speed = 0;
 
         Quaternion re = Quaternion.Euler(Vector3.up * (TurnInput * speed) * TurnForce * Time.deltaTime);
         rb.MoveRotation(rb.rotation * re);

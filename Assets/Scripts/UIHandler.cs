@@ -187,27 +187,25 @@ public class UIHandler : MonoBehaviour
             }
         }
     }
-    /*
     void UpdateNitro()
     {
-        Car car = gameObject.GetComponent<Car>();
+        CarController car = gameObject.GetComponent<CarController>();
         if (car == null) return;
-        float nitroPercent = car.GetNitro() / car.GetMaxNitro();
+        float nitroPercent = car.CurrentNitrous / car.NitrousCapacity;
         NitroBar.GetComponent<RectTransform>().localScale = new Vector3(nitroPercent, 1, 1);
     }
-    */
     void UpdateSpeed()
     {
         float speed = gameObject.GetComponent<Rigidbody>().linearVelocity.magnitude;
         TextMeshProUGUI text = SpeedNum.GetComponent<TextMeshProUGUI>();
         if (text == null) return;
 
-        text.text = $"{Mathf.RoundToInt(speed)}";
+        text.text = $"{Mathf.RoundToInt(speed * 4)}";
     }
     void Update()
     {
         UpdateHealth();
-        //UpdateNitro();
+        UpdateNitro();
         UpdateRadar();
         UpdateAmmo();
         UpdateSpeed();
