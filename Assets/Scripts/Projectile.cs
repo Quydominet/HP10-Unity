@@ -10,7 +10,7 @@ public class Projectile : MonoBehaviour
     [Header("Objects")]
     /*[SerializeField]*/ private GameObject ProjectileObject;
     [SerializeField] private GameObject RayObject;
-    [SerializeField] private Transform BarrelPos;
+    public Transform BarrelPos;
     [Header("Projectiles")]
     [SerializeField] private float Damage = 1;
     [SerializeField] private float Cooldown = 1;

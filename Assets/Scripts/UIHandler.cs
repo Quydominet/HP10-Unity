@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System.Collections;
 
 public class UIHandler : MonoBehaviour
 {
@@ -46,6 +46,8 @@ public class UIHandler : MonoBehaviour
     private Transform WeaponFrame;
     private Transform AmmoContainer;
 
+    private Transform Crosshair;
+
     // Code
     void RenewBlips()
     {
@@ -76,6 +78,8 @@ public class UIHandler : MonoBehaviour
 
         WeaponFrame = PlayerUI.transform.Find("Weapon");
         AmmoContainer = WeaponFrame.Find("AmmoContainer");
+
+        Crosshair = PlayerUI.transform.Find("Crosshair");
         RenewBlips();
     }
     void UpdateHealth()
@@ -202,6 +206,24 @@ public class UIHandler : MonoBehaviour
 
         text.text = $"{Mathf.RoundToInt(speed * 4)}";
     }
+    Vector3 LerpPos(Vector3 start, Vector3 end, float t)
+    {
+        return start + (end - start) * t;
+    }
+    void UpdateCrosshair()
+    {
+        if (DisplayedWeapon == null) return;
+        Transform Barrel = DisplayedWeapon.BarrelPos;
+
+        Ray ray = new Ray(Barrel.position, Barrel.forward);
+        RaycastHit hit;
+        Vector3 targetPoint = Physics.Raycast(ray, out hit, 100f) ? hit.point : ray.GetPoint(100f);
+
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(targetPoint);
+
+        RectTransform CrossPos = Crosshair.GetComponent<RectTransform>();
+        CrossPos.position = LerpPos(CrossPos.position, screenPos, 0.1f);
+    }
     void Update()
     {
         UpdateHealth();
@@ -209,5 +231,6 @@ public class UIHandler : MonoBehaviour
         UpdateRadar();
         UpdateAmmo();
         UpdateSpeed();
+        UpdateCrosshair();
     }
 }
