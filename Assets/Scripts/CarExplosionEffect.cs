@@ -1,44 +1,45 @@
-using System.Security.Cryptography;
-using Unity.Mathematics;
-using Unity.Mathematics.Geometry;
 using UnityEngine;
+
 public class CarExplosionEffect : MonoBehaviour
 {
-    public Material burntMaterial; // universal burnt material
+    public Material burntMaterial;
     public ParticleSystem explosionEffect;
     public ParticleSystem smokeEffect;
 
     private MeshRenderer[] meshRenderers;
+    private Material[][] originalMaterials;
 
     void Start()
     {
-        // Collect all mesh renderers in the car hierarchy
         meshRenderers = GetComponentsInChildren<MeshRenderer>();
+
+        // Cache all original materials (each renderer can have multiple)
+        originalMaterials = new Material[meshRenderers.Length][];
+        for (int i = 0; i < meshRenderers.Length; i++)
+            originalMaterials[i] = meshRenderers[i].materials;
     }
 
     public void Explode()
     {
-        // Play explosion particles
-        //explosionEffect.Play();
-
-        // Swap all materials to burnt instantly
         foreach (MeshRenderer renderer in meshRenderers)
-        {
             renderer.material = burntMaterial;
-        }
+
+        //explosionEffect?.Play();
+        //smokeEffect?.Play();
 
         Rigidbody rb = GetComponent<Rigidbody>();
-
         if (rb != null)
         {
-            Vector3 explosionForce = new Vector3(UnityEngine.Random.Range(-100, 100), 500f, UnityEngine.Random.Range(-100, 100));
-            rb.AddForce(explosionForce);
-            
-            Vector3 spinTorque = new Vector3(UnityEngine.Random.Range(-500, 500), UnityEngine.Random.Range(-500, 500), 0f);
-            rb.AddTorque(spinTorque);
+            rb.AddForce(new Vector3(Random.Range(-100, 100), 500f, Random.Range(-100, 100)));
+            rb.AddTorque(new Vector3(Random.Range(-500, 500), Random.Range(-500, 500), 0f));
         }
+    }
 
-        // Start smoke effect
-        // smokeEffect.Play();
+    public void RemoveExplosion()
+    {
+        for (int i = 0; i < meshRenderers.Length; i++)
+            meshRenderers[i].materials = originalMaterials[i];
+
+        smokeEffect?.Stop();
     }
 }

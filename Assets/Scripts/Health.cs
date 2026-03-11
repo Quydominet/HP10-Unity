@@ -1,13 +1,12 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Health : MonoBehaviour
 {
     [SerializeField] private float MaxHealth = 100;
     [SerializeField] private Collider Collider;
+    [SerializeField] private SpawnPicker SpawnPicker;
     private float CurrentHealth = 100;
     private CarExplosionEffect ExplosionEffect;
-
     float lastHitTime = 0f;
 
     void Start()
@@ -15,73 +14,81 @@ public class Health : MonoBehaviour
         CurrentHealth = MaxHealth;
         if (!Collider) Collider = GetComponent<Collider>();
         if (!ExplosionEffect) ExplosionEffect = GetComponent<CarExplosionEffect>();
+        if (!SpawnPicker) SpawnPicker = FindAnyObjectByType<SpawnPicker>();
     }
+
+    private void Respawn()
+    {
+        Transform spawn = SpawnPicker?.GetBestSpawn();
+
+        if (spawn != null)
+            transform.SetPositionAndRotation(spawn.position, spawn.rotation);
+        else
+            Debug.LogWarning("No spawn point found for " + gameObject.name);
+
+        CurrentHealth = MaxHealth;
+        Collider.enabled = true;
+
+        GyroBalancePhysics Gyro = GetComponent<GyroBalancePhysics>();
+        CarController Car = GetComponent<CarController>();
+        Projectile Gun = GetComponent<Projectile>();
+        CarNPC NPC = GetComponent<CarNPC>();
+
+        if (Gyro) Gyro.enabled = true;
+        if (Car) Car.enabled = true;
+        if (Gun) Gun.enabled = true;
+        if (NPC) NPC.enabled = true;
+
+        ExplosionEffect?.RemoveExplosion();
+    }
+
     private void Die()
     {
-        Collider.enabled = true;
-        ExplosionEffect.Explode();
+        Collider.enabled = false;
+        ExplosionEffect?.Explode();
 
-        GyroBalancePhysics Gyro = FindAnyObjectByType<GyroBalancePhysics>();
-        CarController Car = FindAnyObjectByType<CarController>();
-        Projectile Gun = FindAnyObjectByType<Projectile>();
-        CarNPC NPC = FindAnyObjectByType<CarNPC>();
+        GyroBalancePhysics Gyro = GetComponent<GyroBalancePhysics>();
+        CarController Car = GetComponent<CarController>();
+        Projectile Gun = GetComponent<Projectile>();
+        CarNPC NPC = GetComponent<CarNPC>();
 
-        if (Gyro != null && Gyro.gameObject == this.gameObject)
-            Gyro.enabled = false;
+        if (Gyro) Gyro.enabled = false;
 
-        if (Car != null && Car.gameObject == this.gameObject)
+        if (Car)
         {
             Car.MoveInput = 0f;
             Car.TurnInput = 0f;
             Car.enabled = false;
         }
 
-        if (Gun != null && Gun.gameObject == this.gameObject)
+        if (Gun)
         {
             Gun.firing = false;
             Gun.enabled = false;
         }
 
-        if (NPC != null && NPC.gameObject == this.gameObject)
-        {
-            NPC.enabled = false;
-            Destroy(gameObject, 5f);
-        }
+        if (NPC) NPC.enabled = false;
 
+        Invoke(nameof(Respawn), 5f);
     }
 
     public void TakeDamage(GameObject source, float damage)
     {
-        //print("Taking Damage: " + damage);
-        //print("Damage Source: " + source.name);
         CurrentHealth -= damage;
         CurrentHealth = Mathf.Clamp(CurrentHealth, 0, MaxHealth);
-
         lastHitTime = 0f;
-
-        if (CurrentHealth <= 0)
-        {
-            Die();
-        }
+        if (CurrentHealth <= 0) Die();
     }
 
-    public float GetHealth()
-    {
-        return CurrentHealth;
-    }
-    public float GetMaxHealth()
-    {
-        return MaxHealth;
-    }
+    public float GetHealth() => CurrentHealth;
+    public float GetMaxHealth() => MaxHealth;
 
     void Update()
     {
         lastHitTime += Time.deltaTime;
-
-        if (lastHitTime > 5f && CurrentHealth < MaxHealth/2 && CurrentHealth > 0)
+        if (lastHitTime > 5f && CurrentHealth < MaxHealth / 2 && CurrentHealth > 0)
         {
-            CurrentHealth += MaxHealth * 0.1f * Time.deltaTime; // Regenerate 10% per second
-
+            CurrentHealth += MaxHealth * 0.1f * Time.deltaTime;
             if (CurrentHealth > MaxHealth)
                 CurrentHealth = MaxHealth;
         }
