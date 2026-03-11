@@ -8,6 +8,11 @@ public class CarSound : MonoBehaviour
     public AudioClip runClip;
     public AudioClip heavyClip;
 
+    // SOUND EFFECT
+    public AudioClip shootClip;
+    public AudioClip hitMetalClip;
+    public AudioClip crashClip;
+
     public float minSpeed = 0.5f;
     public float maxSpeed = 20f;
 
@@ -19,28 +24,23 @@ public class CarSound : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
-    [System.Obsolete]
     void Update()
     {
-        float speed = rb.velocity.magnitude;
+        float speed = rb.linearVelocity.magnitude;
 
-        // ===== ĐỨNG YÊN =====
         if (speed < minSpeed)
         {
             ChangeSound(idleClip, 0.8f, 0.5f);
         }
-        // ===== CHẠY =====
-        else if (speed >= minSpeed && speed < maxSpeed)
+        else if (speed < maxSpeed)
         {
             ChangeSound(runClip, 1.1f, 0.8f);
         }
-        // ===== NẶNG MÁY =====
         else
         {
             ChangeSound(heavyClip, 1.3f, 1f);
         }
 
-        // Pitch theo tốc độ
         audioSource.pitch = 0.8f + (speed / maxSpeed);
     }
 
@@ -54,5 +54,31 @@ public class CarSound : MonoBehaviour
 
         audioSource.pitch = Mathf.Lerp(audioSource.pitch, pitch, Time.deltaTime * 2f);
         audioSource.volume = Mathf.Lerp(audioSource.volume, volume, Time.deltaTime * 2f);
+    }
+
+    // SOUND BẮN
+    public void PlayShootSound()
+    {
+        AudioSource.PlayClipAtPoint(shootClip, transform.position);
+    }
+
+    // SOUND ĐẠN TRÚNG KIM LOẠI
+    public void PlayMetalHit()
+    {
+        AudioSource.PlayClipAtPoint(hitMetalClip, transform.position);
+    }
+
+    // VA CHẠM
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.relativeVelocity.magnitude > 3f)
+        {
+            AudioSource.PlayClipAtPoint(crashClip, transform.position);
+        }
+
+        if (collision.gameObject.CompareTag("Metal"))
+        {
+            AudioSource.PlayClipAtPoint(hitMetalClip, transform.position);
+        }
     }
 }
