@@ -1,19 +1,15 @@
 using UnityEngine;
-using static UnityEngine.UI.Image;
 
 [RequireComponent(typeof(Rigidbody))]
-public class GroundGlue : MonoBehaviour
+public class GroundAlignGTA : MonoBehaviour
 {
-    public float rayDistance = 3f;
-    public float rideHeight = 0.6f;
-    public float positionSmooth = 15f;
+    public float rayDistance = 2.5f;
     public float rotationSmooth = 10f;
+    public float downForce = 60f;
     public LayerMask groundLayer;
-    public float extraGravity = 30f;
-    public float maxFallSpeed = 50f;
-
 
     Rigidbody rb;
+    bool grounded;
 
     void Awake()
     {
@@ -23,38 +19,36 @@ public class GroundGlue : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector3 rayOrigin = transform.position + Vector3.up * 1.5f;
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, Vector3.down);
 
-
-        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, rayDistance, groundLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, rayDistance, groundLayer))
         {
-            
-                // Apply stronger gravity
-                rb.AddForce(Vector3.down * extraGravity, ForceMode.Acceleration);
+            grounded = true;
 
-                // Clamp fall speed
-                Vector3 vel = rb.linearVelocity;
-                vel.y = Mathf.Max(vel.y, -maxFallSpeed);
-                rb.linearVelocity = vel;
+            Vector3 groundNormal = hit.normal;
 
+            // Project forward direction onto ground
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, groundNormal).normalized;
 
-            float currentHeight = Vector3.Dot(transform.position - hit.point, hit.normal);
-            float heightError = rideHeight - currentHeight;
+            if (forward.sqrMagnitude < 0.01f)
+                forward = transform.forward;
 
-            Vector3 correction = hit.normal * heightError;
-            rb.MovePosition(rb.position + correction * positionSmooth * Time.fixedDeltaTime);
+            // Create slope-aligned rotation
+            Quaternion targetRotation = Quaternion.LookRotation(forward, groundNormal);
 
-         
-            Quaternion targetRotation =
-                Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+            // Smooth rotation
+            rb.MoveRotation(Quaternion.Slerp(
+                rb.rotation,
+                targetRotation,
+                rotationSmooth * Time.fixedDeltaTime
+            ));
 
-
-            rb.MoveRotation
-                (
-                Quaternion.Slerp(rb.rotation, targetRotation, rotationSmooth * Time.fixedDeltaTime)
-
-            );
-
+            // Stick car to ground
+            rb.AddForce(-groundNormal * downForce, ForceMode.Acceleration);
+        }
+        else
+        {
+            grounded = false;
         }
     }
 }

@@ -1,54 +1,50 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class Car : MonoBehaviour
 {
-    [SerializeField]
-    public float tocdoxe = 100f;
-    [SerializeField]
-    private float lucReXe = 100f;
-    [SerializeField]
-    private float lucPhanh = 50f;
-    [SerializeField]
-    private float dauvaodichuyen;
-    private float dauVaoRe;
-    private Rigidbody rb;
+    [Header("Movement")]
+    public float tocdoxe = 100f;     // motor force
+    public float lucReXe = 60f;      // steering torque
+    public float lucPhanh = 40f;     // brake force
 
+    float dauvaodichuyen;
+    float dauVaoRe;
 
+    Rigidbody rb;
 
-    private void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody>();
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
         dauvaodichuyen = Input.GetAxis("Vertical");
         dauVaoRe = Input.GetAxis("Horizontal");
+
         Dichuyenxe();
         ReXe();
-        if (dauvaodichuyen > 0&& Input.GetKey(KeyCode.LeftShift))
+
+        if (dauvaodichuyen > 0 && Input.GetKey(KeyCode.LeftShift))
         {
             PhanhXe();
         }
     }
 
-    public void Dichuyenxe()
+    void Dichuyenxe()
     {
-        rb.AddRelativeForce(Vector3.forward * dauvaodichuyen * tocdoxe);
-       
+        rb.AddForce(transform.forward * dauvaodichuyen * tocdoxe, ForceMode.Acceleration);
     }
 
-    public void ReXe()
+    void ReXe()
     {
-        Quaternion re = Quaternion.Euler(Vector3.up * dauVaoRe * lucReXe * Time.deltaTime);
-        rb.MoveRotation(rb.rotation * re);
+        rb.AddTorque(Vector3.up * dauVaoRe * lucReXe, ForceMode.Acceleration);
     }
-    public void PhanhXe()
+
+    void PhanhXe()
     {
-        if (rb.linearVelocity.z!= 0)
-        {
-            rb.AddRelativeForce(-Vector3.forward * lucPhanh);
-            
-        }
+        Vector3 brakeForce = -rb.linearVelocity.normalized * lucPhanh;
+        rb.AddForce(brakeForce, ForceMode.Acceleration);
     }
 }
