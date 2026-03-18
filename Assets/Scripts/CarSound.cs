@@ -24,9 +24,10 @@ public class CarSound : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
+    [System.Obsolete]
     void Update()
     {
-        float speed = rb.linearVelocity.magnitude;
+        float speed = rb.velocity.magnitude;
 
         if (speed < minSpeed)
         {
@@ -74,11 +75,6 @@ public class CarSound : MonoBehaviour
         if (collision.relativeVelocity.magnitude > 3f)
         {
             AudioSource.PlayClipAtPoint(crashClip, transform.position);
-        }
-
-        if (collision.gameObject.CompareTag("Metal"))
-        {
-            AudioSource.PlayClipAtPoint(hitMetalClip, transform.position);
         }
     }
 }

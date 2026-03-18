@@ -116,10 +116,13 @@ public class CarController : MonoBehaviour
 
     public void ApplyNitrous()
     {
-        if (!NitrousActive && CurrentNitrous < NitrousCapacity)
+        if (!NitrousActive)
         {
-            CurrentNitrous += Time.deltaTime;
-            CurrentNitrous = Mathf.Min(CurrentNitrous, NitrousCapacity);
+            if (CurrentNitrous < NitrousCapacity)
+            {
+                CurrentNitrous += Time.deltaTime;
+                CurrentNitrous = Mathf.Min(CurrentNitrous, NitrousCapacity);
+            }
 
             return;
         }
@@ -127,7 +130,7 @@ public class CarController : MonoBehaviour
         float speed = rb.linearVelocity.normalized.magnitude;
         float stageMultiplier = 1f + (CurrentNitrousStage - 1) * NitrousStageMultiplier;
 
-        CalculatedNitroForce = speed * NitrousForce * stageMultiplier;
+        CalculatedNitroForce = speed * NitrousForce * stageMultiplier * 0.5f;
 
         float consumptionThisFrame = (1 + stageMultiplier) * Time.deltaTime;
         CurrentNitrous = Mathf.Max(0, CurrentNitrous - consumptionThisFrame);
@@ -155,11 +158,14 @@ public class CarController : MonoBehaviour
 
     public void Turn()
     {
-        float speed = rb.linearVelocity.normalized.magnitude;
+        float speed = RemoveY(rb.linearVelocity).normalized.magnitude;
 
-        if (speed <= 0.01f) speed = 0;
+        if (speed <= 0.1f) return; // No turning when nearly stopped
 
-        Quaternion re = Quaternion.Euler(Vector3.up * (TurnInput * speed) * TurnForce * Time.deltaTime);
+        Quaternion re = Quaternion.Euler(
+            Vector3.up * TurnInput * speed * TurnForce * Time.fixedDeltaTime
+        );
+
         rb.MoveRotation(rb.rotation * re);
     }
 
@@ -170,5 +176,10 @@ public class CarController : MonoBehaviour
             rb.AddRelativeForce(-Vector3.forward);
             //BrakeEffect.SetActive(true);
         }
+    }
+    
+    Vector3 RemoveY(Vector3 target)
+    {
+        return new Vector3(target.x, 0, target.z);
     }
 }
