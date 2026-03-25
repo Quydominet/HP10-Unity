@@ -1,4 +1,3 @@
-using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,6 +8,4 @@ public class PauseScript : MonoBehaviour
     {
         SceneManager.LoadSceneAsync(0);
     }
- 
-
 }

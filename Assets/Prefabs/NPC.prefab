@@ -31,37 +31,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6235577501051087179}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &418988298202023453
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2395108434304976295}
-  m_Layer: 0
-  m_Name: PointFollowTarget
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2395108434304976295
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 418988298202023453}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.51, y: 1.5719998, z: -2.8411136}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3271054288339255257}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1270234987248601190
 GameObject:
   m_ObjectHideFlags: 0
@@ -258,7 +227,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2626030226819759266}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 8, y: 7.72, z: -66.59}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -268,7 +237,6 @@ Transform:
   - {fileID: 2793627668811246089}
   - {fileID: 4648859090857208423}
   - {fileID: 3560526809516019936}
-  - {fileID: 2395108434304976295}
   - {fileID: 852044130049002047}
   - {fileID: 8711213245533137626}
   m_Father: {fileID: 0}
@@ -283,7 +251,7 @@ Rigidbody:
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 5
+  m_AngularDamping: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -435,6 +403,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Health
   MaxHealth: 100
   Collider: {fileID: 7365769866843991411}
+  SpawnPicker: {fileID: 0}
 --- !u!114 &2018017605155291827
 MonoBehaviour:
   m_ObjectHideFlags: 0

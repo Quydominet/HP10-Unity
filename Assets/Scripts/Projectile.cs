@@ -124,7 +124,7 @@ public class Projectile : MonoBehaviour
         controlled = (transform.tag == "Player");
         CurrentAmmo = MaxAmmo;
     }
-    void Update()
+    void FixedUpdate()
     {
         if (CurrentAmmo <= 0)
         {

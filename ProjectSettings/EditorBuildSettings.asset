@@ -9,9 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/StartMenu.unity
     guid: 0dff6f63519471743949b221f3be3422
   - enabled: 1
+    path: Assets/Scenes/Phong.unity
+    guid: 58e0dd7687a30874c876f3ac1b19c21e
+  - enabled: 0
     path: Assets/Scenes/CPhong.unity
     guid: 92ac3c09b686edb418ac10511e610d4d
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
