@@ -1,19 +1,18 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-   public float Life = 3;
+    public AudioClip hitSound; // âm thanh khi đạn trúng
 
+    void OnCollisionEnter(Collision collision)
+    {
+        // Lấy vị trí va chạm
+        Vector3 hitPoint = collision.contacts[0].point;
 
-   void Awake()
-   {
-    Destroy(gameObject, Life);
-   }
+        // Phát âm thanh tại vị trí đó
+        AudioSource.PlayClipAtPoint(hitSound, hitPoint, Random.Range(0.8f, 1.2f));
 
-
-   void OnCollisionEnter(Collision collision)
-   {
-    Destroy(collision.gameObject);
-    Destroy(gameObject);
-   }
+        // Hủy đạn
+        Destroy(gameObject);
+    }
 }
