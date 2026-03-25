@@ -1,9 +1,5 @@
-using System.Collections;
-using System.Threading.Tasks;
-using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Android;
+using System.Collections;
 
 public class Projectile : MonoBehaviour
 {
@@ -24,7 +20,7 @@ public class Projectile : MonoBehaviour
 
     private float LastShotTime;
     private float FadeDuration = 0.1f;
-    private Car car;
+    private CarController car;
 
     private bool controlled = false;
     [HideInInspector] public bool firing = false;
@@ -120,7 +116,7 @@ public class Projectile : MonoBehaviour
     void Start()
     {
         LastShotTime = Time.time;
-        car = GetComponent<Car>();
+        car = GetComponent<CarController>();
         controlled = (transform.tag == "Player");
         CurrentAmmo = MaxAmmo;
     }

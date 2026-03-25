@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,6 +50,27 @@ public class UIHandler : MonoBehaviour
     private Transform Crosshair;
 
     // Code
+    Vector3 LerpPos(Vector3 start, Vector3 end, float t)
+    {
+        return start + (end - start) * t;
+    }
+    private IEnumerator FlashImage(Image img)
+    {
+        Color oldC = img.color;
+        Color newC = oldC;
+        newC.a = 0f;
+
+        img.color = newC;                // transparent
+        yield return new WaitForSeconds(0.1f); // wait 100 ms
+        img.color = oldC;                // restore
+    }
+    public void FlashInfiniteAmmoIcon()
+    {
+        if (AmmoContainer.childCount <= 1) return;
+
+        Image firstImage = AmmoContainer.GetChild(0).GetComponent<Image>();
+        StartCoroutine(FlashImage(firstImage));
+    }
     void RenewBlips()
     {
         blips = new RectTransform[targets.Length];
@@ -58,29 +80,6 @@ public class UIHandler : MonoBehaviour
             RectTransform blip = Instantiate(blipPrefab, BlipContainer);
             blips[i] = blip;
         }
-    }
-    void Awake()
-    {
-        StatusFrame = PlayerUI.transform.Find("Status");
-        HealthScript = gameObject.GetComponent<Health>();
-
-        Health = StatusFrame.Find("Health");
-        HealthBar = Health.Find("Bar");
-
-        Nitro = StatusFrame.Find("Nitro");
-        NitroBar = Nitro.Find("Bar");
-
-        Radar = StatusFrame.Find("Radar");
-        BlipContainer = Radar.Find("BlipContainer");
-
-        Speed = StatusFrame.Find("Speed");
-        SpeedNum = Speed.Find("Number");
-
-        WeaponFrame = PlayerUI.transform.Find("Weapon");
-        AmmoContainer = WeaponFrame.Find("AmmoContainer");
-
-        Crosshair = PlayerUI.transform.Find("Crosshair");
-        RenewBlips();
     }
     void UpdateHealth()
     {
@@ -124,23 +123,6 @@ public class UIHandler : MonoBehaviour
 
             UpdateBlip(targets[i], blips[i]);
         }
-    }
-    private IEnumerator FlashImage(Image img)
-    {
-        Color oldC = img.color;
-        Color newC = oldC;
-        newC.a = 0f;
-
-        img.color = newC;                // transparent
-        yield return new WaitForSeconds(0.1f); // wait 100 ms
-        img.color = oldC;                // restore
-    }
-    public void FlashInfiniteAmmoIcon()
-    {
-        if (AmmoContainer.childCount <= 1) return;
-
-        Image firstImage = AmmoContainer.GetChild(0).GetComponent<Image>();
-        StartCoroutine(FlashImage(firstImage));
     }
     void UpdateAmmo()
     {
@@ -206,10 +188,6 @@ public class UIHandler : MonoBehaviour
 
         text.text = $"{Mathf.RoundToInt(speed * 4)}";
     }
-    Vector3 LerpPos(Vector3 start, Vector3 end, float t)
-    {
-        return start + (end - start) * t;
-    }
     void UpdateCrosshair()
     {
         if (DisplayedWeapon == null) return;
@@ -224,9 +202,39 @@ public class UIHandler : MonoBehaviour
         RectTransform CrossPos = Crosshair.GetComponent<RectTransform>();
         CrossPos.position = LerpPos(CrossPos.position, screenPos, 0.1f);
     }
+    void Awake()
+    {
+        StatusFrame = PlayerUI.transform.Find("Status");
+        HealthScript = gameObject.GetComponent<Health>();
+
+        Health = StatusFrame.Find("Health");
+        HealthBar = Health.Find("Bar");
+
+        Nitro = StatusFrame.Find("Nitro");
+        NitroBar = Nitro.Find("Bar");
+
+        Radar = StatusFrame.Find("Radar");
+        BlipContainer = Radar.Find("BlipContainer");
+
+        Speed = StatusFrame.Find("Speed");
+        SpeedNum = Speed.Find("Number");
+
+        WeaponFrame = PlayerUI.transform.Find("Weapon");
+        AmmoContainer = WeaponFrame.Find("AmmoContainer");
+
+        Crosshair = PlayerUI.transform.Find("Crosshair");
+
+        RenewBlips();
+        UpdateHealth();
+        UpdateNitro();
+        UpdateRadar();
+        UpdateAmmo();
+        UpdateSpeed();
+        UpdateCrosshair();
+    }
+    void HealthChange() { UpdateHealth(); }
     void Update()
     {
-        UpdateHealth();
         UpdateNitro();
         UpdateRadar();
         UpdateAmmo();

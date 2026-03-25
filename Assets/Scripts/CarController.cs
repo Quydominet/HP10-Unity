@@ -1,5 +1,6 @@
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using static UnityEngine.LightTransport.InputExtraction;
 
 public class CarController : MonoBehaviour
 {
@@ -21,7 +22,12 @@ public class CarController : MonoBehaviour
     public float CurrentNitrous;
 
     private int CurrentNitrousStage = 0;
+    private float CalculatedNitroForce;
     private bool NitrousActive = false;
+
+    [Header("Balance Settings")]
+    [SerializeField] private float flipTorqueStrength = 5f;
+    [SerializeField] private float flipDamping = 2f;
 
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint; // empty GameObject under car
@@ -30,16 +36,24 @@ public class CarController : MonoBehaviour
 
     [HideInInspector] public float MoveInput = 0;
     [HideInInspector] public float TurnInput = 0;
+    [HideInInspector] public bool BrakeInput = false;
+    [HideInInspector] public bool NitrousPressed = false;
     [SerializeField] private bool controlled = false;
 
     WheelCollider[] wheels;
 
-    private Rigidbody rb;
+    private Rigidbody CarBody;
     public bool isGrounded = false;
 
-    private void Awake()
+    Vector3 RemoveY(Vector3 target)
     {
-        rb = GetComponent<Rigidbody>();
+        return new Vector3(target.x, 0, target.z);
+    }
+
+    void Awake()
+    {
+        CarBody = GetComponent<Rigidbody>();
+        CarBody.maxAngularVelocity = 20f;
         controlled = (transform.tag == "Player");
 
         wheels = new WheelCollider[4];
@@ -50,39 +64,54 @@ public class CarController : MonoBehaviour
 
         CurrentNitrous = NitrousCapacity;
     }
-    private void FixedUpdate()
+    void Update()
     {
-        // Inputs
-        if (controlled)
-        {
-            MoveInput = Input.GetAxis("Vertical");
-            TurnInput = Input.GetAxis("Horizontal");
-        }
+        if (!controlled) return;
 
-        // Ground check
+        MoveInput = Input.GetAxis("Vertical");
+        TurnInput = Input.GetAxis("Horizontal");
+        BrakeInput = Input.GetKey(KeyCode.Space);
+        NitrousPressed = Input.GetKeyDown(KeyCode.LeftShift);
+    }
+    void FixedUpdate()
+    {
+        if (!enabled) return;
+
         isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
 
-        // Only allow control if grounded
-        if (isGrounded)
+        if (controlled && isGrounded)
         {
             Move();
             Turn();
-
-            if (MoveInput > 0 && Input.GetKey(KeyCode.Space))
-                Brake();
+            if ((MoveInput > 0) && BrakeInput) Brake();
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && CurrentNitrous > 0f)
+        if (NitrousPressed && CurrentNitrous > 0f)
         {
             CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
             NitrousActive = true;
+            NitrousPressed = false; // Consume it
         }
 
         ApplyNitrous();
         SetWheel();
+        BalanceGyro();
     }
+    void BalanceGyro() {
+        Quaternion targetRotation = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, 0f);
+        Quaternion delta = targetRotation * Quaternion.Inverse(transform.rotation);
 
-    public void SetWheel()
+        delta.ToAngleAxis(out float angle, out Vector3 axis);
+        if (angle > 180f) angle -= 360f;
+
+        axis.y = 0f;
+
+        Vector3 correctiveTorque = axis.normalized * angle * flipTorqueStrength;
+        Vector3 dampingTorque = -CarBody.angularVelocity * flipDamping;
+
+        CarBody.AddTorque(correctiveTorque + dampingTorque);
+    }
+    void SetWheel()
     {
         for (int i = 0; i < wheels.Length; i++)
         {
@@ -111,9 +140,7 @@ public class CarController : MonoBehaviour
             wheelMesh.transform.rotation = wheelRotation;
         }
     }
-
-    private float CalculatedNitroForce;
-
+    //Public for NPC use
     public void ApplyNitrous()
     {
         if (!NitrousActive)
@@ -127,7 +154,7 @@ public class CarController : MonoBehaviour
             return;
         }
 
-        float speed = rb.linearVelocity.normalized.magnitude;
+        float speed = CarBody.linearVelocity.normalized.magnitude;
         float stageMultiplier = 1f + (CurrentNitrousStage - 1) * NitrousStageMultiplier;
 
         CalculatedNitroForce = speed * NitrousForce * stageMultiplier * 0.5f;
@@ -151,14 +178,14 @@ public class CarController : MonoBehaviour
             MoveForce *= 0.4f;
         }
 
-        rb.AddRelativeForce(MoveForce);
+        CarBody.AddRelativeForce(MoveForce);
 
         //BrakeEffect.SetActive(false);
     }
 
     public void Turn()
     {
-        float speed = RemoveY(rb.linearVelocity).normalized.magnitude;
+        float speed = RemoveY(CarBody.linearVelocity).normalized.magnitude;
 
         if (speed <= 0.1f) return; // No turning when nearly stopped
 
@@ -166,20 +193,15 @@ public class CarController : MonoBehaviour
             Vector3.up * TurnInput * speed * TurnForce * Time.fixedDeltaTime
         );
 
-        rb.MoveRotation(rb.rotation * re);
+        CarBody.MoveRotation(CarBody.rotation * re);
     }
 
     public void Brake()
     {
-        if (rb.linearVelocity.z != 0)
+        if (CarBody.linearVelocity.z != 0)
         {
-            rb.AddRelativeForce(-Vector3.forward);
+            CarBody.AddRelativeForce(-Vector3.forward);
             //BrakeEffect.SetActive(true);
         }
-    }
-    
-    Vector3 RemoveY(Vector3 target)
-    {
-        return new Vector3(target.x, 0, target.z);
     }
 }

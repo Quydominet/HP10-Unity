@@ -66,10 +66,29 @@ MonoBehaviour:
       - rid: -2
       - rid: -2
       - rid: -2
+<<<<<<< Updated upstream
       - rid: 3243968580738351169
       - rid: 3243968580738351170
+=======
+      - rid: 4992201758605312
+      - rid: 4992201758605313
+>>>>>>> Stashed changes
     m_RuntimeSettings:
-      m_List: []
+      m_List:
+      - rid: 6852985685364965378
+      - rid: 6852985685364965379
+      - rid: 6852985685364965380
+      - rid: 6852985685364965381
+      - rid: 6852985685364965384
+      - rid: 6852985685364965385
+      - rid: 6852985685364965392
+      - rid: 6852985685364965394
+      - rid: 8712630790384254976
+      - rid: 8754017103400665088
+      - rid: 8754017103400665090
+      - rid: 8754017103400665093
+      - rid: 5272049482843816181
+      - rid: 5272049482843816182
   m_AssetVersion: 8
   m_ObsoleteDefaultVolumeProfile: {fileID: 0}
   m_RenderingLayerNames:
@@ -102,7 +121,11 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+<<<<<<< Updated upstream
     - rid: 3243968580738351169
+=======
+    - rid: 4992201758605312
+>>>>>>> Stashed changes
       type: {class: PostProcessData/ShaderResources, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:
         stopNanPS: {fileID: 4800000, guid: 1121bb4e615ca3c48b214e79e841e823, type: 3}
@@ -122,7 +145,11 @@ MonoBehaviour:
         uberPostPS: {fileID: 4800000, guid: e7857e9d0c934dc4f83f270f8447b006, type: 3}
         finalPostPassPS: {fileID: 4800000, guid: c49e63ed1bbcb334780a3bd19dfed403, type: 3}
         m_ShaderResourcesVersion: 0
+<<<<<<< Updated upstream
     - rid: 3243968580738351170
+=======
+    - rid: 4992201758605313
+>>>>>>> Stashed changes
       type: {class: PostProcessData/TextureResources, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:
         blueNoise16LTex:

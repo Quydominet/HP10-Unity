@@ -29,12 +29,12 @@ public class Health : MonoBehaviour
         CurrentHealth = MaxHealth;
         Collider.enabled = true;
 
-        GyroBalancePhysics Gyro = GetComponent<GyroBalancePhysics>();
+        BroadcastMessage("HealthChange", SendMessageOptions.DontRequireReceiver);
+
         CarController Car = GetComponent<CarController>();
         Projectile Gun = GetComponent<Projectile>();
         CarNPC NPC = GetComponent<CarNPC>();
 
-        if (Gyro) Gyro.enabled = true;
         if (Car) Car.enabled = true;
         if (Gun) Gun.enabled = true;
         if (NPC) NPC.enabled = true;
@@ -47,12 +47,9 @@ public class Health : MonoBehaviour
         Collider.enabled = false;
         ExplosionEffect?.Explode();
 
-        GyroBalancePhysics Gyro = GetComponent<GyroBalancePhysics>();
         CarController Car = GetComponent<CarController>();
         Projectile Gun = GetComponent<Projectile>();
         CarNPC NPC = GetComponent<CarNPC>();
-
-        if (Gyro) Gyro.enabled = false;
 
         if (Car)
         {
@@ -77,20 +74,23 @@ public class Health : MonoBehaviour
         CurrentHealth -= damage;
         CurrentHealth = Mathf.Clamp(CurrentHealth, 0, MaxHealth);
         lastHitTime = 0f;
+        BroadcastMessage("HealthChange", SendMessageOptions.DontRequireReceiver);
+
         if (CurrentHealth <= 0) Die();
     }
 
     public float GetHealth() => CurrentHealth;
     public float GetMaxHealth() => MaxHealth;
-
     void Update()
     {
         lastHitTime += Time.deltaTime;
+
         if (lastHitTime > 5f && CurrentHealth < MaxHealth / 2 && CurrentHealth > 0)
         {
             CurrentHealth += MaxHealth * 0.1f * Time.deltaTime;
-            if (CurrentHealth > MaxHealth)
-                CurrentHealth = MaxHealth;
+            if (CurrentHealth > MaxHealth) CurrentHealth = MaxHealth;
+
+            BroadcastMessage("HealthChange", SendMessageOptions.DontRequireReceiver);
         }
     }
 }
