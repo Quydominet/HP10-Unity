@@ -204,14 +204,12 @@ GameObject:
   m_Component:
   - component: {fileID: 3271054288339255257}
   - component: {fileID: 5325390513708187975}
-  - component: {fileID: 457985023034516886}
-  - component: {fileID: 5173115966723370455}
-  - component: {fileID: 7223994684046755503}
-  - component: {fileID: 1945511177564770950}
-  - component: {fileID: 6316627381824602311}
   - component: {fileID: 7850476572006504739}
   - component: {fileID: 2384548028883848785}
+  - component: {fileID: 457985023034516886}
+  - component: {fileID: 6316627381824602311}
   - component: {fileID: 2018017605155291827}
+  - component: {fileID: 5173115966723370455}
   m_Layer: 0
   m_Name: NPC
   m_TagString: NPC
@@ -268,105 +266,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 32
   m_CollisionDetection: 1
---- !u!114 &457985023034516886
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2626030226819759266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5f7f1dc1f2feed438ca79fbae365f58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  SpeedForce: 15
-  TurnForce: 100
-  BrakeForce: 50
-  BrakeEffect: {fileID: 0}
-  CurrentNitrous: 0
-  groundCheckPoint: {fileID: 8711213245533137626}
-  groundCheckRadius: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  MoveInput: 0
-  TurnInput: 0
-  controlled: 0
-  isGrounded: 0
---- !u!114 &5173115966723370455
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2626030226819759266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55f0f4a64c7bf44b5677aee80f7c99, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Projectile
-  RayObject: {fileID: 3187255057432103852, guid: e73c59ecbf9fc1f48b4b25a042a3a2f8, type: 3}
-  BarrelPos: {fileID: 7346873303840809574}
-  Damage: 1
-  Cooldown: 0.01
-  Range: 100
-  SpreadAngle: 5
-  MaxAmmo: 2147483647
-  ReloadTime: 1
-  firing: 0
---- !u!114 &7223994684046755503
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2626030226819759266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55f0f4a64c7bf44b5677aee80f7c99, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Projectile
-  RayObject: {fileID: 0}
-  BarrelPos: {fileID: 0}
-  Damage: 1
-  Cooldown: 1
-  Range: 15
-  SpreadAngle: 15
-  MaxAmmo: 2147483647
-  ReloadTime: 1
-  firing: 0
---- !u!114 &1945511177564770950
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2626030226819759266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d133bb8ca4f5354594508240989e8e0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  torqueStrength: 0.3
-  damping: 10
---- !u!114 &6316627381824602311
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2626030226819759266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b299608ac3f23b3478716f5cf49a9aad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  target: {fileID: 0}
-  stopDistance: 10
-  turnSpeed: 5
-  moveSensitivity: 1
-  fireAngle: 30
 --- !u!195 &7850476572006504739
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -404,6 +303,55 @@ MonoBehaviour:
   MaxHealth: 100
   Collider: {fileID: 7365769866843991411}
   SpawnPicker: {fileID: 0}
+--- !u!114 &457985023034516886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2626030226819759266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f7f1dc1f2feed438ca79fbae365f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpeedForce: 20
+  TurnAngle: 80
+  BrakeForce: 50
+  BrakeEffect: {fileID: 0}
+  wheelFrictionStiffness: 2
+  CurrentNitrous: 0
+  flipTorqueStrength: 1.5
+  flipDamping: 10
+  groundCheckPoint: {fileID: 8711213245533137626}
+  groundCheckRadius: 0.2
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  MoveInput: 0
+  TurnInput: 0
+  BrakeInput: 0
+  NitrousPressed: 0
+  controlled: 0
+  isGrounded: 0
+--- !u!114 &6316627381824602311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2626030226819759266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b299608ac3f23b3478716f5cf49a9aad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  target: {fileID: 0}
+  stopDistance: 10
+  moveSensitivity: 1
+  steerSensitivity: 1.5
+  reverseAngleThreshold: 110
+  fireAngle: 30
 --- !u!114 &2018017605155291827
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,6 +367,27 @@ MonoBehaviour:
   burntMaterial: {fileID: 2100000, guid: fafc0cd4915c901439064a71da03ff4b, type: 2}
   explosionEffect: {fileID: 0}
   smokeEffect: {fileID: 0}
+--- !u!114 &5173115966723370455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2626030226819759266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee55f0f4a64c7bf44b5677aee80f7c99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectile
+  RayObject: {fileID: 3187255057432103852, guid: e73c59ecbf9fc1f48b4b25a042a3a2f8, type: 3}
+  BarrelPos: {fileID: 7346873303840809574}
+  Damage: 1
+  Cooldown: 0.01
+  Range: 100
+  SpreadAngle: 5
+  MaxAmmo: 2147483647
+  ReloadTime: 1
+  firing: 0
 --- !u!1 &2646847120668068617
 GameObject:
   m_ObjectHideFlags: 0

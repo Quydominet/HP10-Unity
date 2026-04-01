@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 9071867692707848750}
   - component: {fileID: 5514058653594077729}
   - component: {fileID: 5525969673128187054}
-  - component: {fileID: 3572008680166941762}
   - component: {fileID: 2769065130423043105}
+  - component: {fileID: 3572008680166941762}
   - component: {fileID: 1962538463038862596}
   - component: {fileID: 4636450928981066855}
   - component: {fileID: 6612561111118259806}
@@ -89,6 +89,37 @@ MonoBehaviour:
   MaxHealth: 100
   Collider: {fileID: 3913989921594438785}
   SpawnPicker: {fileID: 0}
+--- !u!114 &2769065130423043105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295035410439417735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f7f1dc1f2feed438ca79fbae365f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpeedForce: 20
+  TurnAngle: 80
+  BrakeForce: 50
+  BrakeEffect: {fileID: 0}
+  wheelFrictionStiffness: 0
+  CurrentNitrous: 0
+  flipTorqueStrength: 1.5
+  flipDamping: 10
+  groundCheckPoint: {fileID: 7498488463026773021}
+  groundCheckRadius: 0.2
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  MoveInput: 0
+  TurnInput: 0
+  BrakeInput: 0
+  NitrousPressed: 0
+  controlled: 1
+  isGrounded: 0
 --- !u!114 &3572008680166941762
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -104,32 +135,6 @@ MonoBehaviour:
   burntMaterial: {fileID: 2100000, guid: fafc0cd4915c901439064a71da03ff4b, type: 2}
   explosionEffect: {fileID: 0}
   smokeEffect: {fileID: 0}
---- !u!114 &2769065130423043105
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 295035410439417735}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5f7f1dc1f2feed438ca79fbae365f58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  SpeedForce: 15
-  TurnForce: 100
-  BrakeForce: 50
-  BrakeEffect: {fileID: 0}
-  CurrentNitrous: 0
-  groundCheckPoint: {fileID: 7498488463026773021}
-  groundCheckRadius: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  MoveInput: 0
-  TurnInput: 0
-  controlled: 1
-  isGrounded: 0
 --- !u!114 &1962538463038862596
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,7 +192,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Projectile
   RayObject: {fileID: 3187255057432103852, guid: e73c59ecbf9fc1f48b4b25a042a3a2f8, type: 3}
   BarrelPos: {fileID: 6499688879308956027}
-  Damage: 50
+  Damage: 20
   Cooldown: 1
   Range: 100
   SpreadAngle: 0.01

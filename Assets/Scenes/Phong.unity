@@ -2938,7 +2938,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
   m_SerializedVersion: 0
   m_AgentTypeID: -1372625422
-  m_CollectObjects: 0
+  m_CollectObjects: 2
   m_Size: {x: 10, y: 10, z: 10}
   m_Center: {x: 0, y: 2, z: 0}
   m_LayerMask:
@@ -2946,13 +2946,13 @@ MonoBehaviour:
     m_Bits: 4294967295
   m_UseGeometry: 1
   m_DefaultArea: 0
-  m_GenerateLinks: 0
+  m_GenerateLinks: 1
   m_IgnoreNavMeshAgent: 1
   m_IgnoreNavMeshObstacle: 1
   m_OverrideTileSize: 0
   m_TileSize: 256
-  m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.33333334
+  m_OverrideVoxelSize: 1
+  m_VoxelSize: 0.125
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: bc35cb30fca9c37479217f17bc95a9c3, type: 2}
   m_BuildHeightMesh: 0
@@ -6085,13 +6085,13 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 457985023034516886, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
-      propertyPath: flipDamping
-      value: 10
+      propertyPath: groundCheckRadius
+      value: 0.4
       objectReference: {fileID: 0}
-    - target: {fileID: 457985023034516886, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
-      propertyPath: flipTorqueStrength
-      value: 2
-      objectReference: {fileID: 0}
+    - target: {fileID: 2384548028883848785, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
+      propertyPath: SpawnPicker
+      value: 
+      objectReference: {fileID: 1959002400}
     - target: {fileID: 2626030226819759266, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
       propertyPath: m_Name
       value: NPC
@@ -6106,7 +6106,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3271054288339255257, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -66.59
+      value: -53.92
       objectReference: {fileID: 0}
     - target: {fileID: 3271054288339255257, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -6136,12 +6136,15 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5325390513708187975, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
+      propertyPath: m_Constraints
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6316627381824602311, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 6383362012434431833}
-    m_RemovedComponents:
-    - {fileID: 1945511177564770950, guid: 47f41d734e417b24aae0e8fdee20371d, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -6477,14 +6480,10 @@ PrefabInstance:
       propertyPath: 'targets.Array.data[0]'
       value: 
       objectReference: {fileID: 1760407441}
-    - target: {fileID: 2769065130423043105, guid: 522dcb867ee29c34fa2ae55ebf2f59dd, type: 3}
-      propertyPath: flipDamping
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 2769065130423043105, guid: 522dcb867ee29c34fa2ae55ebf2f59dd, type: 3}
-      propertyPath: flipTorqueStrength
-      value: 2
-      objectReference: {fileID: 0}
+    - target: {fileID: 5525969673128187054, guid: 522dcb867ee29c34fa2ae55ebf2f59dd, type: 3}
+      propertyPath: SpawnPicker
+      value: 
+      objectReference: {fileID: 1959002400}
     - target: {fileID: 9071867692707848750, guid: 522dcb867ee29c34fa2ae55ebf2f59dd, type: 3}
       propertyPath: m_LocalPosition.x
       value: -21.72

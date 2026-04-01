@@ -40,6 +40,7 @@ public class CarExplosionEffect : MonoBehaviour
         for (int i = 0; i < meshRenderers.Length; i++)
             meshRenderers[i].materials = originalMaterials[i];
 
-        smokeEffect?.Stop();
+        if (explosionEffect != null) explosionEffect.Stop();
+        if (smokeEffect != null) smokeEffect.Stop();
     }
 }

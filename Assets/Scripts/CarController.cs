@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
-using static UnityEngine.LightTransport.InputExtraction;
 
 public class CarController : MonoBehaviour
 {
@@ -15,9 +13,12 @@ public class CarController : MonoBehaviour
     [Tooltip("Additional force per extra stage (e.g. 0.5 = +50% per stage)")]
     readonly public float NitrousStageMultiplier = 0.25f;
 
-    [SerializeField] private float TurnForce = 100f;
+    [SerializeField] private float TurnAngle = 20f;
     [SerializeField] private float BrakeForce = 50f;
     [SerializeField] private GameObject BrakeEffect;
+
+    [Header("Wheel Settings")]
+    [SerializeField] private float wheelFrictionStiffness = 2f;
 
     public float CurrentNitrous;
 
@@ -63,9 +64,25 @@ public class CarController : MonoBehaviour
         wheels[3] = transform.Find("LFwheel").GetComponent<WheelCollider>();
 
         CurrentNitrous = NitrousCapacity;
+        //SetWheelFriction();
+    }
+    void SetWheelFriction()
+    {
+        foreach (var wheel in wheels)
+        {
+            WheelFrictionCurve fwd = wheel.forwardFriction;
+            fwd.stiffness = wheelFrictionStiffness;
+            wheel.forwardFriction = fwd;
+
+            WheelFrictionCurve side = wheel.sidewaysFriction;
+            side.stiffness = wheelFrictionStiffness;
+            wheel.sidewaysFriction = side;
+        }
     }
     void Update()
     {
+        SetWheel();
+
         if (!controlled) return;
 
         MoveInput = Input.GetAxis("Vertical");
@@ -79,7 +96,7 @@ public class CarController : MonoBehaviour
 
         isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
 
-        if (controlled && isGrounded)
+        if (isGrounded)
         {
             Move();
             Turn();
@@ -94,10 +111,11 @@ public class CarController : MonoBehaviour
         }
 
         ApplyNitrous();
-        SetWheel();
         BalanceGyro();
     }
-    void BalanceGyro() {
+    void BalanceGyro()
+    {
+        //if (isGrounded) return;
         Quaternion targetRotation = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, 0f);
         Quaternion delta = targetRotation * Quaternion.Inverse(transform.rotation);
 
@@ -118,7 +136,7 @@ public class CarController : MonoBehaviour
             Vector3 pos;
             Quaternion rot;
 
-            wheels[i].motorTorque = MoveInput * SpeedForce;
+            // Visual wheel position/rotation update
             wheels[i].GetWorldPose(out pos, out rot);
 
             GameObject wheelMesh = wheels[i].transform.GetChild(0).gameObject;
@@ -171,26 +189,47 @@ public class CarController : MonoBehaviour
 
     public void Move()
     {
+        float torque = MoveInput * (SpeedForce + CalculatedNitroForce);
         Vector3 MoveForce = Vector3.forward * MoveInput * (SpeedForce + CalculatedNitroForce);
 
         if (MoveInput < 0)
         {
             MoveForce *= 0.4f;
+            torque *= 0.4f;
         }
 
-        CarBody.AddRelativeForce(MoveForce);
+        //Rear
+        wheels[0].motorTorque = torque;
+        wheels[1].motorTorque = torque;
+        //Front
+        wheels[2].motorTorque = 0f;
+        wheels[3].motorTorque = 0f;
 
+        CarBody.AddRelativeForce(MoveForce);
         //BrakeEffect.SetActive(false);
     }
 
     public void Turn()
     {
-        float speed = RemoveY(CarBody.linearVelocity).normalized.magnitude;
+        /*
+        //Rear
+        wheels[0].steerAngle = 0f;
+        wheels[1].steerAngle = 0f;
+        //Front
+        wheels[2].steerAngle = TurnInput * TurnAngle;
+        wheels[3].steerAngle = TurnInput * TurnAngle;
+        
+        */
 
-        if (speed <= 0.1f) return; // No turning when nearly stopped
+        float speed = RemoveY(CarBody.linearVelocity).normalized.magnitude;
+        Vector3 TurnTorque = Vector3.up * TurnInput * TurnAngle;
+
+        //if (speed < 0.01f) return; // No turning when nearly stopped
+
+        CarBody.AddRelativeTorque(TurnTorque);
 
         Quaternion re = Quaternion.Euler(
-            Vector3.up * TurnInput * speed * TurnForce * Time.fixedDeltaTime
+            Vector3.up * TurnInput * speed * TurnAngle * Time.fixedDeltaTime
         );
 
         CarBody.MoveRotation(CarBody.rotation * re);
@@ -198,10 +237,12 @@ public class CarController : MonoBehaviour
 
     public void Brake()
     {
+        
         if (CarBody.linearVelocity.z != 0)
         {
             CarBody.AddRelativeForce(-Vector3.forward);
-            //BrakeEffect.SetActive(true);
         }
+
+        //BrakeEffect.SetActive(true);
     }
 }

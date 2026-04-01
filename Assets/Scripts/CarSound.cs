@@ -24,10 +24,9 @@ public class CarSound : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
-    [System.Obsolete]
     void Update()
     {
-        float speed = rb.velocity.magnitude;
+        float speed = rb.linearVelocity.magnitude;
 
         if (speed < minSpeed)
         {
