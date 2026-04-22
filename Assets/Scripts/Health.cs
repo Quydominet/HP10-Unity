@@ -64,7 +64,17 @@ public class Health : MonoBehaviour
             Gun.enabled = false;
         }
 
-        if (NPC) NPC.enabled = false;
+        if (NPC)
+        {
+            NPC.enabled = false;
+        }
+
+        if (gameObject.tag == "NPC")
+        {
+            GameObject player = GameObject.FindWithTag("Player");
+
+            if (gameObject.CompareTag("NPC")) player.SendMessage("NPCDeath", SendMessageOptions.DontRequireReceiver);
+        }
 
         Invoke(nameof(Respawn), 5f);
     }

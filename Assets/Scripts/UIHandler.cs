@@ -43,6 +43,12 @@ public class UIHandler : MonoBehaviour
     private Transform Speed;
     private Transform SpeedNum;
 
+    // Points Frame
+    private Transform Point;
+    private Transform PointNum;
+
+    private int CurrentPoint = 0;
+
     // Weapon Frame
     private Transform WeaponFrame;
     private Transform AmmoContainer;
@@ -202,6 +208,13 @@ public class UIHandler : MonoBehaviour
         RectTransform CrossPos = Crosshair.GetComponent<RectTransform>();
         CrossPos.position = LerpPos(CrossPos.position, screenPos, 0.1f);
     }
+    void UpdatePoints()
+    {
+        TextMeshProUGUI text = PointNum.GetComponent<TextMeshProUGUI>();
+        if (text == null) return;
+
+        text.text = "Points: " + CurrentPoint.ToString();
+    }
     void Awake()
     {
         StatusFrame = PlayerUI.transform.Find("Status");
@@ -219,6 +232,9 @@ public class UIHandler : MonoBehaviour
         Speed = StatusFrame.Find("Speed");
         SpeedNum = Speed.Find("Number");
 
+        Point = PlayerUI.transform.Find("Points");
+        PointNum = Point.Find("Number");
+
         WeaponFrame = PlayerUI.transform.Find("Weapon");
         AmmoContainer = WeaponFrame.Find("AmmoContainer");
 
@@ -231,6 +247,12 @@ public class UIHandler : MonoBehaviour
         UpdateAmmo();
         UpdateSpeed();
         UpdateCrosshair();
+        UpdatePoints();
+    }
+    void NPCDeath()
+    {
+        CurrentPoint += 5;
+        UpdatePoints();
     }
     void HealthChange() { UpdateHealth(); }
     void Update()
