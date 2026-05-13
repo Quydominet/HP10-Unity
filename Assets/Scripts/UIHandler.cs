@@ -17,6 +17,10 @@ public class UIHandler : MonoBehaviour
     public float radarRange = 50f;
     public float radarSize = 156f;
 
+    [Header("Speed Settings")]
+    readonly private float MinAngle = 150f;
+    readonly private float MaxAngle = -92.42f;
+
     [Header("Weapon Settings")]
     [SerializeField] private RectTransform AmmoIconPrefab;
     public Projectile DisplayedWeapon;
@@ -42,6 +46,7 @@ public class UIHandler : MonoBehaviour
 
     private Transform Speed;
     private Transform SpeedNum;
+    private Transform SpeedArrow;
 
     // Points Frame
     private Transform Point;
@@ -188,11 +193,14 @@ public class UIHandler : MonoBehaviour
     }
     void UpdateSpeed()
     {
-        float speed = gameObject.GetComponent<Rigidbody>().linearVelocity.magnitude;
+        CarController car = transform.GetComponent<CarController>();
+        if (!car) return;
+        float speed = car.GetSpeed();
         TextMeshProUGUI text = SpeedNum.GetComponent<TextMeshProUGUI>();
         if (text == null) return;
 
-        text.text = $"{Mathf.RoundToInt(speed * 4)}";
+        SpeedArrow.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(MinAngle, MaxAngle, speed / car.SpeedForce));
+        text.text = $"<mspace=.5em>{Mathf.RoundToInt(speed):D3}";
     }
     void UpdateCrosshair()
     {
@@ -229,8 +237,9 @@ public class UIHandler : MonoBehaviour
         Radar = StatusFrame.Find("Radar");
         BlipContainer = Radar.Find("BlipContainer");
 
-        Speed = StatusFrame.Find("Speed");
+        Speed = PlayerUI.transform.Find("Speed");
         SpeedNum = Speed.Find("Number");
+        SpeedArrow = Speed.Find("Arrow");
 
         Point = PlayerUI.transform.Find("Points");
         PointNum = Point.Find("Number");
@@ -242,11 +251,6 @@ public class UIHandler : MonoBehaviour
 
         RenewBlips();
         UpdateHealth();
-        UpdateNitro();
-        UpdateRadar();
-        UpdateAmmo();
-        UpdateSpeed();
-        UpdateCrosshair();
         UpdatePoints();
     }
     void NPCDeath()

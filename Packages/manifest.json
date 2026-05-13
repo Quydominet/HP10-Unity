@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "com.unity.ai.navigation": "2.0.9",
+    "com.benedict.gridplacer": "https://github.com/Benedict1210/Grid-Placer.git",
+    "com.unity.ai.navigation": "2.0.12",
     "com.unity.cinemachine": "3.1.4",
     "com.unity.collab-proxy": "2.10.0",
     "com.unity.ide.rider": "3.0.38",

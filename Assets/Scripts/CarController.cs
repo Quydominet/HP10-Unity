@@ -1,5 +1,12 @@
 using UnityEngine;
 
+[System.Serializable]
+public class Gear
+{
+    public float maxSpeed;           // m/s cap for this gear
+    public float torqueMultiplier;   // force multiplier while in this gear
+}
+
 public class CarController : MonoBehaviour
 {
     [Header("Car Settings")]
@@ -30,6 +37,23 @@ public class CarController : MonoBehaviour
     [SerializeField] private float flipTorqueStrength = 5f;
     [SerializeField] private float flipDamping = 2f;
 
+    [Header("Gear Settings")]
+    [SerializeField]
+    private Gear[] gears = new Gear[]
+{
+    new Gear { maxSpeed = 8f,  torqueMultiplier = 1.6f  },  // 1st
+    new Gear { maxSpeed = 14f, torqueMultiplier = 1.3f  },  // 2nd
+    new Gear { maxSpeed = 20f, torqueMultiplier = 1.0f  },  // 3rd
+    new Gear { maxSpeed = 27f, torqueMultiplier = 0.75f },  // 4th
+    new Gear { maxSpeed = 33f, torqueMultiplier = 0.55f },  // 5th
+};
+    [SerializeField] private float shiftUpBuffer = 0.95f;   // shift at 95% of gear's max
+    [SerializeField] private float shiftDownBuffer = 0.6f;  // drop back at 60%
+
+    public int CurrentGear { get; private set; } = 0;
+    public float GetTopSpeed() => gears[gears.Length - 1].maxSpeed;
+    public int GetGearCount() => gears.Length;
+
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint; // empty GameObject under car
     [SerializeField] private float groundCheckRadius = 0.5f;
@@ -50,7 +74,10 @@ public class CarController : MonoBehaviour
     {
         return new Vector3(target.x, 0, target.z);
     }
-
+    public float GetSpeed()
+    {
+        return RemoveY(CarBody.linearVelocity).magnitude;
+    }
     void Awake()
     {
         CarBody = GetComponent<Rigidbody>();
@@ -186,7 +213,7 @@ public class CarController : MonoBehaviour
             CurrentNitrousStage = 0;
         }
     }
-
+    /*
     public void Move()
     {
         float torque = MoveInput * (SpeedForce + CalculatedNitroForce);
@@ -208,19 +235,43 @@ public class CarController : MonoBehaviour
         CarBody.AddRelativeForce(MoveForce);
         //BrakeEffect.SetActive(false);
     }
+    */
+    public void Move()
+    {
+        float speed = RemoveY(CarBody.linearVelocity).magnitude;
+
+        // Auto shift up
+        if (CurrentGear < gears.Length - 1 && speed >= gears[CurrentGear].maxSpeed * shiftUpBuffer)
+            CurrentGear++;
+        // Auto shift down
+        else if (CurrentGear > 0 && speed < gears[CurrentGear - 1].maxSpeed * shiftDownBuffer)
+            CurrentGear--;
+
+        Gear gear = gears[CurrentGear];
+
+        // Scale force to zero as speed approaches max — prevents overshoot
+        float speedRatio = Mathf.Clamp01(speed / gear.maxSpeed);
+        float forceFade = 1f - Mathf.Pow(speedRatio, 3); // eases off near the cap
+
+        float torque = MoveInput * SpeedForce * gear.torqueMultiplier * forceFade;
+        Vector3 MoveForce = Vector3.forward * MoveInput * SpeedForce * gear.torqueMultiplier * forceFade;
+
+        if (MoveInput < 0)
+        {
+            MoveForce *= 0.4f;
+            torque *= 0.4f;
+        }
+
+        wheels[0].motorTorque = torque;
+        wheels[1].motorTorque = torque;
+        wheels[2].motorTorque = 0f;
+        wheels[3].motorTorque = 0f;
+
+        CarBody.AddRelativeForce(MoveForce);
+    }
 
     public void Turn()
     {
-        /*
-        //Rear
-        wheels[0].steerAngle = 0f;
-        wheels[1].steerAngle = 0f;
-        //Front
-        wheels[2].steerAngle = TurnInput * TurnAngle;
-        wheels[3].steerAngle = TurnInput * TurnAngle;
-        
-        */
-
         float speed = RemoveY(CarBody.linearVelocity).normalized.magnitude;
         Vector3 TurnTorque = Vector3.up * TurnInput * TurnAngle;
 
