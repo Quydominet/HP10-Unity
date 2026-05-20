@@ -1,8 +1,5 @@
 ﻿using System.Collections;
-using System.Threading.Tasks;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,40 +15,47 @@ public class UIHandler : MonoBehaviour
     public float radarSize = 156f;
 
     [Header("Speed Settings")]
-    readonly private float MinAngle = 150f;
-    readonly private float MaxAngle = -92.42f;
+    private readonly float MinAngle = 150f;
+    private readonly float MaxAngle = -92.42f;
+
+    [Header("UI Mode Settings")]
+    public bool ToggleSpeedo = false;
 
     [Header("Weapon Settings")]
     [SerializeField] private RectTransform AmmoIconPrefab;
     public Projectile DisplayedWeapon;
 
     [Header("Targets")]
-    public Transform[] targets;             // World objects to track
-    public RectTransform blipPrefab;        // Prefab for blip icon
-    private RectTransform[] blips;          // Instantiated blips
-
+    public Transform[] targets;         // World objects to track
+    public RectTransform blipPrefab;    // Prefab for blip icon
+    private RectTransform[] blips;      // Instantiated blips
 
     // Status Frame
     private Transform StatusFrame;
     private Health HealthScript;
 
     private Transform Health;
-    private Transform HealthBar;
+    private Image HealthBarImage;
+    private RectTransform HealthBarRect;
+    private Image HealthBgImage;
 
     private Transform Radar;
     private Transform BlipContainer;
 
     private Transform Nitro;
-    private Transform NitroBar;
+    private RectTransform NitroBarRect;
 
     private Transform Speed;
-    private Transform SpeedNum;
     private Transform SpeedArrow;
+    private TextMeshProUGUI SpeedText;
+    private TextMeshProUGUI GearText;
+
+    private Transform Markers;
+    private Transform MarkTemplate;
 
     // Points Frame
     private Transform Point;
-    private Transform PointNum;
-
+    private TextMeshProUGUI PointText;
     private int CurrentPoint = 0;
 
     // Weapon Frame
@@ -59,68 +63,58 @@ public class UIHandler : MonoBehaviour
     private Transform AmmoContainer;
 
     private Transform Crosshair;
+    private RectTransform CrosshairRect;
 
-    // Code
-    Vector3 LerpPos(Vector3 start, Vector3 end, float t)
-    {
-        return start + (end - start) * t;
-    }
+    // Cached car ref
+    private CarController car;
+
+    Vector3 LerpPos(Vector3 start, Vector3 end, float t) => start + (end - start) * t;
+
     private IEnumerator FlashImage(Image img)
     {
-        Color oldC = img.color;
-        Color newC = oldC;
-        newC.a = 0f;
+        Color original = img.color;
+        Color transparent = original;
+        transparent.a = 0f;
 
-        img.color = newC;                // transparent
-        yield return new WaitForSeconds(0.1f); // wait 100 ms
-        img.color = oldC;                // restore
+        img.color = transparent;
+        yield return new WaitForSeconds(0.1f);
+        img.color = original;
     }
+
     public void FlashInfiniteAmmoIcon()
     {
         if (AmmoContainer.childCount <= 1) return;
-
         Image firstImage = AmmoContainer.GetChild(0).GetComponent<Image>();
         StartCoroutine(FlashImage(firstImage));
     }
-    void RenewBlips()
-    {
-        blips = new RectTransform[targets.Length];
 
-        for (int i = 0; i < targets.Length; i++)
-        {
-            RectTransform blip = Instantiate(blipPrefab, BlipContainer);
-            blips[i] = blip;
-        }
-    }
     void UpdateHealth()
     {
         float healthPercent = HealthScript.GetHealth() / HealthScript.GetMaxHealth();
 
-        HealthBar.GetComponent<RectTransform>().localScale = new Vector3(healthPercent, 1, 1);
-        HealthBar.GetComponent<Image>().color = Color.Lerp(
-            new Color(128f / 255f, 38f / 255f, 38f / 255f),   // dark red
+        HealthBarRect.localScale = new Vector3(healthPercent, 1f, 1f);
+        HealthBarImage.color = Color.Lerp(
+            new Color(128f / 255f, 38f / 255f, 38f / 255f),    // dark red
             new Color(47f / 255f, 128f / 255f, 38f / 255f),   // green
-            healthPercent                             // 0 → red, 1 → green
+            healthPercent
         );
-
-        Health.GetComponent<Image>().color = Color.Lerp(
-            new Color(63f / 255f, 19f / 255f, 19f / 255f),   // dark red
-            new Color(37f / 255f, 71f / 255f, 38f / 255f),   // green
-            healthPercent                             // 0 → red, 1 → green
+        HealthBgImage.color = Color.Lerp(
+            new Color(63f / 255f, 19f / 255f, 19f / 255f),     // dark red
+            new Color(37f / 255f, 71f / 255f, 38f / 255f),     // green
+            healthPercent
         );
     }
+
     void UpdateBlip(Transform target, RectTransform blip)
     {
         Vector3 offset = target.position - PlayerRoot.position;
 
-        float cameraYaw = PlayerCam.eulerAngles.y;
-        Quaternion rotation = Quaternion.Euler(0, -cameraYaw, 0);
+        Quaternion rotation = Quaternion.Euler(0f, -PlayerCam.eulerAngles.y, 0f);
         Vector3 rotatedOffset = rotation * offset;
-        
-        Vector2 radarPos = new Vector2(rotatedOffset.x, rotatedOffset.z) / radarRange * (radarSize / 2);
 
-        blip.anchoredPosition = radarPos;
+        blip.anchoredPosition = new Vector2(rotatedOffset.x, rotatedOffset.z) / radarRange * (radarSize / 2f);
     }
+
     void UpdateRadar()
     {
         for (int i = 0; i < targets.Length; i++)
@@ -135,130 +129,209 @@ public class UIHandler : MonoBehaviour
             UpdateBlip(targets[i], blips[i]);
         }
     }
+
     void UpdateAmmo()
     {
         if (DisplayedWeapon == null) return;
+
         int currentAmmo = DisplayedWeapon.GetAmmo();
         int maxAmmo = DisplayedWeapon.GetMaxAmmo();
 
+        // Rebuild icons if count changed
         if (maxAmmo != AmmoContainer.childCount)
         {
-            // Update count
             foreach (Transform child in AmmoContainer)
-            {
                 Destroy(child.gameObject);
-            }
 
             if (maxAmmo == int.MaxValue)
             {
-                RectTransform ammoIcon = Instantiate(AmmoIconPrefab, AmmoContainer);
-                ammoIcon.name = "0";
+                // Single infinite-ammo icon
+                Instantiate(AmmoIconPrefab, AmmoContainer).name = "0";
             }
             else
             {
                 for (int i = 0; i < maxAmmo; i++)
+                    Instantiate(AmmoIconPrefab, AmmoContainer).name = i.ToString();
+            }
+        }
+        else if (maxAmmo != int.MaxValue)
+        {
+            // Update icon visibility
+            for (int i = 0; i < maxAmmo; i++)
+            {
+                Transform ammoObject = AmmoContainer.Find(i.ToString());
+                if (ammoObject == null) continue;
+
+                Image ammoImage = ammoObject.GetComponent<Image>();
+                Color c = ammoImage.color;
+                c.a = i < currentAmmo ? 1f : 0f;
+                ammoImage.color = c;
+            }
+        }
+    }
+
+    void UpdateNitro()
+    {
+        if (car == null) return;
+        float nitroPercent = car.CurrentNitrous / car.NitrousCapacity;
+        NitroBarRect.localScale = new Vector3(nitroPercent, 1f, 1f);
+    }
+
+    void UpdateSpeed()
+    {
+        if (car == null || SpeedText == null) return;
+
+        float speed = car.GetSpeed();
+        int gear = car.CurrentGear;
+
+        float maxSpeed = ToggleSpeedo
+            ? car.GetTopSpeed()
+            : (gear >= 0 ? car.gears[gear].maxSpeed : car.reverseGear.maxSpeed);
+
+        SpeedArrow.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(MinAngle, MaxAngle, speed / maxSpeed));
+        SpeedText.text = $"<mspace=.5em>{Mathf.RoundToInt(speed * 3.6f):D3}";
+
+        GearText.text = gear == -1 ? "R" : $"{gear + 1}";
+    }
+
+    void UpdateCrosshair()
+    {
+        if (DisplayedWeapon == null) return;
+
+        Transform barrel = DisplayedWeapon.BarrelPos;
+        Ray ray = new Ray(barrel.position, barrel.forward);
+
+        Vector3 targetPoint = Physics.Raycast(ray, out RaycastHit hit, 100f) ? hit.point : ray.GetPoint(100f);
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(targetPoint);
+
+        CrosshairRect.position = LerpPos(CrosshairRect.position, screenPos, 0.1f);
+    }
+    void CreateMarkers()
+    {
+        //Cleanup
+        foreach (Transform child in Markers)
+        {
+            if (child == MarkTemplate) continue;
+            Destroy(child.gameObject);
+        }
+
+        if (ToggleSpeedo)
+        {
+            float maxSpeed = Mathf.Ceil(car.GetTopSpeed()*3.6f/10)*10;
+            for (int speed = 0; speed <= maxSpeed; speed+=2)
+            {
+                float speedFraction = speed / maxSpeed;
+                float angle = Mathf.Lerp(MinAngle, MaxAngle, speedFraction);
+                Transform marker = Instantiate(MarkTemplate, Markers);
+                marker.name = "Marker_" + speed;
+                marker.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+                if (speed % 20 == 0)
                 {
-                    RectTransform ammoIcon = Instantiate(AmmoIconPrefab, AmmoContainer);
-                    ammoIcon.name = i.ToString();
+                    Transform MarkerImg = marker.Find("Mark");
+                    MarkerImg.gameObject.SetActive(true);
                 }
+                else
+                {
+                    Transform MarkerImg = marker.Find("SubMark");
+                    MarkerImg.gameObject.SetActive(true);
+                }
+
+                marker.gameObject.SetActive(true);
             }
         }
         else
         {
-            if (maxAmmo != int.MaxValue)
+            int maxRPM = 8000;
+            int step = 250;
+
+            for (int rpm = 0; rpm <= maxRPM; rpm += step)
             {
-                for (int i = 0; i < maxAmmo; i++)
+                float rpmFraction = (float)rpm / maxRPM;
+                float angle = Mathf.Lerp(MinAngle, MaxAngle, rpmFraction);
+
+                Transform marker = Instantiate(MarkTemplate, Markers);
+                marker.name = "Marker_" + rpm;
+                marker.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+                if (rpm % 1000 == 0)
                 {
-                    Transform AmmoObject = AmmoContainer.Find(i.ToString());
-                    if (AmmoObject == null) continue;
-                    Image ammoImage = AmmoObject.GetComponent<Image>();
-                    Color newC = ammoImage.color;
-
-                    if (i < currentAmmo)
-                        newC.a = 1f;
-                    else
-                        newC.a = 0f;
-
-                    ammoImage.color = newC;
+                    marker.Find("Mark").gameObject.SetActive(true);
                 }
+                else
+                {
+                    marker.Find("SubMark").gameObject.SetActive(true);
+                }
+
+                marker.gameObject.SetActive(true);
             }
         }
     }
-    void UpdateNitro()
-    {
-        CarController car = gameObject.GetComponent<CarController>();
-        if (car == null) return;
-        float nitroPercent = car.CurrentNitrous / car.NitrousCapacity;
-        NitroBar.GetComponent<RectTransform>().localScale = new Vector3(nitroPercent, 1, 1);
-    }
-    void UpdateSpeed()
-    {
-        CarController car = transform.GetComponent<CarController>();
-        if (!car) return;
-        float speed = car.GetSpeed();
-        TextMeshProUGUI text = SpeedNum.GetComponent<TextMeshProUGUI>();
-        if (text == null) return;
-
-        SpeedArrow.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(MinAngle, MaxAngle, speed / car.SpeedForce));
-        text.text = $"<mspace=.5em>{Mathf.RoundToInt(speed):D3}";
-    }
-    void UpdateCrosshair()
-    {
-        if (DisplayedWeapon == null) return;
-        Transform Barrel = DisplayedWeapon.BarrelPos;
-
-        Ray ray = new Ray(Barrel.position, Barrel.forward);
-        RaycastHit hit;
-        Vector3 targetPoint = Physics.Raycast(ray, out hit, 100f) ? hit.point : ray.GetPoint(100f);
-
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(targetPoint);
-
-        RectTransform CrossPos = Crosshair.GetComponent<RectTransform>();
-        CrossPos.position = LerpPos(CrossPos.position, screenPos, 0.1f);
-    }
     void UpdatePoints()
     {
-        TextMeshProUGUI text = PointNum.GetComponent<TextMeshProUGUI>();
-        if (text == null) return;
-
-        text.text = "Points: " + CurrentPoint.ToString();
+        if (PointText == null) return;
+        PointText.text = "Points: " + CurrentPoint;
     }
+
+    void RenewBlips()
+    {
+        blips = new RectTransform[targets.Length];
+        for (int i = 0; i < targets.Length; i++)
+            blips[i] = Instantiate(blipPrefab, BlipContainer);
+    }
+
     void Awake()
     {
+        // Cache car
+        car = GetComponent<CarController>();
+
+        // Status frame
         StatusFrame = PlayerUI.transform.Find("Status");
-        HealthScript = gameObject.GetComponent<Health>();
+        HealthScript = GetComponent<Health>();
 
-        Health = StatusFrame.Find("Health");
-        HealthBar = Health.Find("Bar");
+        Transform healthTransform = StatusFrame.Find("Health");
+        HealthBgImage = healthTransform.GetComponent<Image>();
+        Transform bar = healthTransform.Find("Bar");
+        HealthBarRect = bar.GetComponent<RectTransform>();
+        HealthBarImage = bar.GetComponent<Image>();
 
-        Nitro = StatusFrame.Find("Nitro");
-        NitroBar = Nitro.Find("Bar");
+        Transform nitro = StatusFrame.Find("Nitro");
+        NitroBarRect = nitro.Find("Bar").GetComponent<RectTransform>();
 
         Radar = StatusFrame.Find("Radar");
         BlipContainer = Radar.Find("BlipContainer");
 
-        Speed = PlayerUI.transform.Find("Speed");
-        SpeedNum = Speed.Find("Number");
-        SpeedArrow = Speed.Find("Arrow");
+        // Speed frame
+        Transform speedFrame = PlayerUI.transform.Find("Speed");
+        SpeedArrow = speedFrame.Find("Arrow");
+        SpeedText = speedFrame.Find("Number").GetComponent<TextMeshProUGUI>();
+        GearText = speedFrame.Find("Gear").GetComponent<TextMeshProUGUI>();
+        Markers = speedFrame.Find("Markers");
+        MarkTemplate = Markers.Find("Template");
 
+        // Points frame
         Point = PlayerUI.transform.Find("Points");
-        PointNum = Point.Find("Number");
+        PointText = Point.Find("Number").GetComponent<TextMeshProUGUI>();
 
+        // Weapon frame
         WeaponFrame = PlayerUI.transform.Find("Weapon");
         AmmoContainer = WeaponFrame.Find("AmmoContainer");
 
+        // Crosshair
         Crosshair = PlayerUI.transform.Find("Crosshair");
+        CrosshairRect = Crosshair.GetComponent<RectTransform>();
 
         RenewBlips();
+    }
+
+    void Start()
+    {
+        // All Awakes are done — safe to read from other components
         UpdateHealth();
         UpdatePoints();
+        CreateMarkers();
     }
-    void NPCDeath()
-    {
-        CurrentPoint += 5;
-        UpdatePoints();
-    }
-    void HealthChange() { UpdateHealth(); }
+
     void Update()
     {
         UpdateNitro();
@@ -267,4 +340,12 @@ public class UIHandler : MonoBehaviour
         UpdateSpeed();
         UpdateCrosshair();
     }
+
+    void NPCDeath()
+    {
+        CurrentPoint += 5;
+        UpdatePoints();
+    }
+
+    void HealthChange() => UpdateHealth();
 }

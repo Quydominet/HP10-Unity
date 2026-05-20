@@ -3,33 +3,35 @@ using UnityEngine;
 [System.Serializable]
 public class Gear
 {
-    public float maxSpeed;           // m/s cap for this gear
-    public float torqueMultiplier;   // force multiplier while in this gear
+    [Tooltip("Top speed for this gear in m/s, x3.6 for k/m")]
+    public float maxSpeed;
+    [Tooltip("Force multiplier while in this gear")]
+    public float torqueMultiplier;
 }
 
 public class CarController : MonoBehaviour
 {
     [Header("Car Settings")]
     public float SpeedForce = 100f;
-    readonly public float NitrousForce = 10f;
-    readonly public float NitrousCapacity = 5f;
+    public float TurnAngle = 20f;
+    public float BrakeForce = 50f;
 
     [Header("Nitrous Settings")]
-    [Tooltip("Maximum number of stacked nitro presses")]
-    readonly public int MaxNitrousStage = 4;
-    [Tooltip("Additional force per extra stage (e.g. 0.5 = +50% per stage)")]
-    readonly public float NitrousStageMultiplier = 0.25f;
+    public float NitrousForce = 10f;
+    public float NitrousCapacity  = 5f;
 
-    [SerializeField] private float TurnAngle = 20f;
-    [SerializeField] private float BrakeForce = 50f;
-    [SerializeField] private GameObject BrakeEffect;
+    [Tooltip("Maximum number of stacked nitro presses")]
+    public int MaxNitrousStage = 4;
+    [Tooltip("Additional force per extra stage (e.g. 0.5 = +50% per stage)")]
+    public float NitrousStageMultiplier = 0.25f;
 
     [Header("Wheel Settings")]
-    [SerializeField] private float wheelFrictionStiffness = 2f;
+    public float wheelFrictionStiffness = 2f;
+    private GameObject BrakeEffect;
 
-    public float CurrentNitrous;
+    public float CurrentNitrous { get; private set; }
 
-    private int CurrentNitrousStage = 0;
+    public int CurrentNitrousStage { get; private set; } = 0;
     private float CalculatedNitroForce;
     private bool NitrousActive = false;
 
@@ -37,9 +39,10 @@ public class CarController : MonoBehaviour
     [SerializeField] private float flipTorqueStrength = 5f;
     [SerializeField] private float flipDamping = 2f;
 
+
     [Header("Gear Settings")]
     [SerializeField]
-    private Gear[] gears = new Gear[]
+    public Gear[] gears { get; private set; } = new Gear[]
 {
     new Gear { maxSpeed = 8f,  torqueMultiplier = 1.6f  },  // 1st
     new Gear { maxSpeed = 14f, torqueMultiplier = 1.3f  },  // 2nd
@@ -47,6 +50,7 @@ public class CarController : MonoBehaviour
     new Gear { maxSpeed = 27f, torqueMultiplier = 0.75f },  // 4th
     new Gear { maxSpeed = 33f, torqueMultiplier = 0.55f },  // 5th
 };
+    [SerializeField] public Gear reverseGear { get; private set; } = new Gear { maxSpeed = 8f, torqueMultiplier = 0.6f };
     [SerializeField] private float shiftUpBuffer = 0.95f;   // shift at 95% of gear's max
     [SerializeField] private float shiftDownBuffer = 0.6f;  // drop back at 60%
 
@@ -213,63 +217,46 @@ public class CarController : MonoBehaviour
             CurrentNitrousStage = 0;
         }
     }
-    /*
-    public void Move()
-    {
-        float torque = MoveInput * (SpeedForce + CalculatedNitroForce);
-        Vector3 MoveForce = Vector3.forward * MoveInput * (SpeedForce + CalculatedNitroForce);
-
-        if (MoveInput < 0)
-        {
-            MoveForce *= 0.4f;
-            torque *= 0.4f;
-        }
-
-        //Rear
-        wheels[0].motorTorque = torque;
-        wheels[1].motorTorque = torque;
-        //Front
-        wheels[2].motorTorque = 0f;
-        wheels[3].motorTorque = 0f;
-
-        CarBody.AddRelativeForce(MoveForce);
-        //BrakeEffect.SetActive(false);
-    }
-    */
     public void Move()
     {
         float speed = RemoveY(CarBody.linearVelocity).magnitude;
+        bool isReversing = MoveInput < 0;
 
-        // Auto shift up
-        if (CurrentGear < gears.Length - 1 && speed >= gears[CurrentGear].maxSpeed * shiftUpBuffer)
-            CurrentGear++;
-        // Auto shift down
-        else if (CurrentGear > 0 && speed < gears[CurrentGear - 1].maxSpeed * shiftDownBuffer)
-            CurrentGear--;
+        Gear gear;
 
-        Gear gear = gears[CurrentGear];
+        if (isReversing)
+        {
+            CurrentGear = -1;
+            gear = reverseGear;
+        }
+        else
+        {
+            // Reset to 0 if coming out of reverse
+            if (CurrentGear < 0) CurrentGear = 0;
 
-        // Scale force to zero as speed approaches max — prevents overshoot
+            // Auto shift up
+            if (CurrentGear < gears.Length - 1 && speed >= gears[CurrentGear].maxSpeed * shiftUpBuffer)
+                CurrentGear++;
+            // Auto shift down
+            else if (CurrentGear > 0 && speed < gears[CurrentGear - 1].maxSpeed * shiftDownBuffer)
+                CurrentGear--;
+
+            gear = gears[CurrentGear];
+        }
+
         float speedRatio = Mathf.Clamp01(speed / gear.maxSpeed);
-        float forceFade = 1f - Mathf.Pow(speedRatio, 3); // eases off near the cap
+        float forceFade = 1f - Mathf.Pow(speedRatio, 8);
 
         float torque = MoveInput * SpeedForce * gear.torqueMultiplier * forceFade;
         Vector3 MoveForce = Vector3.forward * MoveInput * SpeedForce * gear.torqueMultiplier * forceFade;
 
-        if (MoveInput < 0)
-        {
-            MoveForce *= 0.4f;
-            torque *= 0.4f;
-        }
-
         wheels[0].motorTorque = torque;
         wheels[1].motorTorque = torque;
-        wheels[2].motorTorque = 0f;
-        wheels[3].motorTorque = 0f;
+        wheels[2].motorTorque = torque;
+        wheels[3].motorTorque = torque;
 
         CarBody.AddRelativeForce(MoveForce);
     }
-
     public void Turn()
     {
         float speed = RemoveY(CarBody.linearVelocity).normalized.magnitude;
