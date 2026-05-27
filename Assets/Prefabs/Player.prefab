@@ -66,13 +66,13 @@ Rigidbody:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 12
   m_ImplicitCom: 0
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 32
+  m_Constraints: 0
   m_CollisionDetection: 1
 --- !u!114 &5525969673128187054
 MonoBehaviour:
@@ -101,14 +101,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f7f1dc1f2feed438ca79fbae365f58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SpeedForce: 20
-  TurnAngle: 80
+  SpeedForce: 1.5
+  TurnAngle: 30
   BrakeForce: 50
-  BrakeEffect: {fileID: 0}
+  steerSpeed: 8
+  steerReturnSpeed: 8
+  highSpeedSteerScale: 0.4
+  gripStrength: 6
+  NitrousForce: 20
+  NitrousCapacity: 5
+  MaxNitrousStage: 4
+  NitrousStageMultiplier: 0.25
   wheelFrictionStiffness: 0
-  CurrentNitrous: 0
   flipTorqueStrength: 1.5
   flipDamping: 10
+  _gears:
+  - maxSpeed: 3
+    torqueMultiplier: 1.6
+  - maxSpeed: 10
+    torqueMultiplier: 1.34
+  - maxSpeed: 17
+    torqueMultiplier: 1.2
+  - maxSpeed: 22
+    torqueMultiplier: 1
+  - maxSpeed: 28
+    torqueMultiplier: 0.87
+  _reverseGear:
+    maxSpeed: 8
+    torqueMultiplier: 0.6
+  shiftUpBuffer: 0.95
+  shiftDownBuffer: 0.6
   groundCheckPoint: {fileID: 7498488463026773021}
   groundCheckRadius: 0.2
   groundLayer:
@@ -152,9 +174,15 @@ MonoBehaviour:
   PlayerCam: {fileID: 0}
   radarRange: 50
   radarSize: 156
+  ToggleSpeedo: 0
   AmmoIconPrefab: {fileID: 2495813545171637212, guid: 836150d844c68d449ba69c4f8f11cbd2, type: 3}
   DisplayedWeapon: {fileID: 4636450928981066855}
   targets:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   blipPrefab: {fileID: 1815259673761785787, guid: 2b204c7e33c4f49448311818426f4938, type: 3}
 --- !u!114 &4636450928981066855
@@ -245,7 +273,7 @@ Transform:
   m_GameObject: {fileID: 410551819249021976}
   serializedVersion: 2
   m_LocalRotation: {x: 0.56779796, y: -0, z: -0, w: 0.8231679}
-  m_LocalPosition: {x: 0, y: 16.22, z: -0.59}
+  m_LocalPosition: {x: 0, y: 19.267273, z: -5.0010004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -554,7 +582,7 @@ WheelCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2305812712867789010}
   serializedVersion: 2
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0.15, y: 0, z: 0}
   m_Radius: 0.3
   m_SuspensionSpring:
     spring: 67
@@ -657,7 +685,7 @@ WheelCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3134695194606075056}
   serializedVersion: 2
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0.15, y: 0, z: 0}
   m_Radius: 0.3
   m_SuspensionSpring:
     spring: 67
@@ -2109,7 +2137,7 @@ WheelCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7236330589791663776}
   serializedVersion: 2
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0.15, y: 0, z: 0}
   m_Radius: 0.3
   m_SuspensionSpring:
     spring: 67
@@ -2364,7 +2392,7 @@ WheelCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8096699829721744241}
   serializedVersion: 2
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0.15, y: 0, z: 0}
   m_Radius: 0.3
   m_SuspensionSpring:
     spring: 67

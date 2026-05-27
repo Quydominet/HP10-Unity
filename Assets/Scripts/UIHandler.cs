@@ -15,7 +15,7 @@ public class UIHandler : MonoBehaviour
     public float radarSize = 156f;
 
     [Header("Speed Settings")]
-    private readonly float MinAngle = 150f;
+    private readonly float MinAngle = 159.7f;
     private readonly float MaxAngle = -92.42f;
 
     [Header("UI Mode Settings")]
@@ -193,7 +193,6 @@ public class UIHandler : MonoBehaviour
 
         GearText.text = gear == -1 ? "R" : $"{gear + 1}";
     }
-
     void UpdateCrosshair()
     {
         if (DisplayedWeapon == null) return;
