@@ -6,6 +6,7 @@ public class Projectile : MonoBehaviour
     [Header("Objects")]
     /*[SerializeField]*/ private GameObject ProjectileObject;
     [SerializeField] private GameObject RayObject;
+    public Animator GunAnimator;
     public Transform BarrelPos;
     [Header("Projectiles")]
     [SerializeField] private float Damage = 1;
@@ -104,6 +105,9 @@ public class Projectile : MonoBehaviour
             line.SetPosition(1, hitPoint);
             StartCoroutine(FadeLine(line, newRay));
         }
+
+        // Play gun animation
+        if (GunAnimator != null) GunAnimator.SetTrigger("Shoot");
     }
     public int GetMaxAmmo()
     {

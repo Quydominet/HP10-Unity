@@ -1,3 +1,4 @@
+using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines.Interpolators;
@@ -9,6 +10,15 @@ public class Gear
     public float maxSpeed;
     [Tooltip("Force multiplier while in this gear")]
     public float torqueMultiplier;
+}
+
+[System.Serializable]
+public class CamConfig
+{
+    [Tooltip("The part where the camera is placed")]
+    public Transform CamPositionObject;
+    [Tooltip("Field of view")]
+    public float FOV;
 }
 
 public class CarController : MonoBehaviour
@@ -48,6 +58,16 @@ public class CarController : MonoBehaviour
     [SerializeField] private float flipTorqueStrength = 5f;
     [SerializeField] private float flipDamping = 2f;
 
+    [Header("Camera Settings")]
+    [SerializeField]
+    private CamConfig[] CamConfigs = new CamConfig[]
+    {
+        new CamConfig { CamPositionObject = null, FOV = 60f }, // default
+    };
+    [SerializeField] private CinemachineCamera CineCamera;
+
+    private int currentCamIndex = 0;
+
     [Header("Gear Settings")]
     [SerializeField]
     private Gear[] _gears = new Gear[]
@@ -78,6 +98,7 @@ public class CarController : MonoBehaviour
     [HideInInspector] public bool BrakeInput = false;
     [HideInInspector] public bool NitrousPressed = false;
     [SerializeField] private bool controlled = false;
+    private bool CamChangePressed = false;
 
     WheelCollider[] wheels;
 
@@ -116,6 +137,8 @@ public class CarController : MonoBehaviour
 
         CurrentNitrous = NitrousCapacity;
         //SetWheelFriction();
+
+        ApplyCamera();
     }
 
     void Update()
@@ -128,6 +151,25 @@ public class CarController : MonoBehaviour
         TurnInput = Input.GetAxis("Horizontal");
         BrakeInput = Input.GetKey(KeyCode.Space);
         NitrousPressed = Input.GetKeyDown(KeyCode.LeftShift);
+        CamChangePressed = Input.GetKeyDown(KeyCode.C);
+
+        if (CamChangePressed)
+        {
+            CamChangePressed = false; // Debounce
+
+            currentCamIndex = (currentCamIndex + 1) % CamConfigs.Length;
+            ApplyCamera();
+        }
+
+        if (NitrousPressed && CurrentNitrous > 0f)
+        {
+            NitrousPressed = false; // Debounce
+
+            CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
+            NitrousActive = true;
+        }
+
+        ApplyNitrous();
     }
 
     void FixedUpdate()
@@ -135,15 +177,6 @@ public class CarController : MonoBehaviour
         if (!enabled) return;
 
         isGrounded = Physics.CheckSphere(groundCheckPoint.position, groundCheckRadius, groundLayer);
-
-        if (NitrousPressed && CurrentNitrous > 0f)
-        {
-            CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
-            NitrousActive = true;
-            NitrousPressed = false; // Consume it
-        }
-
-        ApplyNitrous();
 
         if (isGrounded)
         {
@@ -209,7 +242,8 @@ public class CarController : MonoBehaviour
         // Reduce steering angle at high speed — more realistic, prevents spinouts
         float speedFraction = Mathf.Clamp01(speed / GetTopSpeed());
         float steerLimit = Mathf.Lerp(1f, highSpeedSteerScale, speedFraction);
-        float targetSteer = TurnInput * TurnAngle * steerLimit;
+        float dot = Vector3.Dot(transform.forward, CarBody.linearVelocity);
+        float targetSteer = TurnInput * TurnAngle * steerLimit * (dot < 0 ? -1f : 1f);
 
         // Smooth the steering input instead of snapping
         float blendSpeed = TurnInput != 0 ? steerSpeed : steerReturnSpeed;
@@ -217,7 +251,7 @@ public class CarController : MonoBehaviour
 
         // Apply as yaw torque — scaled by actual speed so slow turns feel sluggish
         float torqueStrength = Mathf.Lerp(0f, 1f, speed / 3f); // fades in from standstill
-        CarBody.AddRelativeTorque(Vector3.up * currentSteerAngle * torqueStrength * (isGrounded ? 1f : 0.25f));
+        CarBody.AddRelativeTorque(Vector3.up * currentSteerAngle * torqueStrength * (isGrounded ? 1f : 0.45f));
 
         // Cancel lateral (sideways) velocity — simulates tire grip
         Vector3 localVelocity = transform.InverseTransformDirection(CarBody.linearVelocity);
@@ -286,6 +320,8 @@ public class CarController : MonoBehaviour
     }
     void SetWheel()
     {
+        float dot = Vector3.Dot(transform.forward, CarBody.linearVelocity.normalized);
+
         for (int i = 0; i < wheels.Length; i++)
         {
             wheels[i].GetWorldPose(out Vector3 pos, out Quaternion rot);
@@ -297,7 +333,7 @@ public class CarController : MonoBehaviour
             Quaternion wheelRotation = rot;
 
             if (i > 1)
-                wheelRotation = Quaternion.Euler(0, currentSteerAngle, 0) * wheelRotation;
+                wheelRotation = Quaternion.Euler(0, currentSteerAngle * Mathf.RoundToInt(dot), 0) * wheelRotation;
 
             if (i % 2 != 0)
                 wheelRotation *= Quaternion.Euler(0, 180, 0);
@@ -306,17 +342,10 @@ public class CarController : MonoBehaviour
         }
     }
 
-    void SetWheelFriction()
+    void ApplyCamera()
     {
-        foreach (var wheel in wheels)
-        {
-            WheelFrictionCurve fwd = wheel.forwardFriction;
-            fwd.stiffness = wheelFrictionStiffness;
-            wheel.forwardFriction = fwd;
-
-            WheelFrictionCurve side = wheel.sidewaysFriction;
-            side.stiffness = wheelFrictionStiffness;
-            wheel.sidewaysFriction = side;
-        }
+        if (CineCamera == null || controlled == false || CamConfigs.Length == 0 || CamConfigs[currentCamIndex].CamPositionObject == null) return;
+        CineCamera.Target.TrackingTarget = CamConfigs[currentCamIndex].CamPositionObject;
+        CineCamera.Lens.FieldOfView = CamConfigs[currentCamIndex].FOV;
     }
 }

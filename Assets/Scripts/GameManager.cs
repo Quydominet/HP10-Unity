@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     };
     void Awake()
     {
+#if !UNITY_EDITOR
         IngameSave.LoadData();
 
         foreach (var entry in Defaults)
@@ -33,10 +34,13 @@ public class GameManager : MonoBehaviour
             if (!IngameSave.data.ContainsKey(entry.Key))
                 IngameSave.data[entry.Key] = entry.Value;
         }
+#endif
     }
 
     private void OnApplicationQuit()
     {
+#if !UNITY_EDITOR
         IngameSave.SaveData();
+#endif
     }
 }

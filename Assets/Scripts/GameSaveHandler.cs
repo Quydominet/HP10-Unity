@@ -15,7 +15,6 @@ public class SaveHandler : MonoBehaviour
 
     void Awake()
     {
-        if (Application.isPlaying) LoadData();
         //WARNING! data.Clear() deletes EVERYTHING
         //data.Clear();
         //SaveData();
