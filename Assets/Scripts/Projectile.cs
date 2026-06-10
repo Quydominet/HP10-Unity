@@ -105,9 +105,6 @@ public class Projectile : MonoBehaviour
             line.SetPosition(1, hitPoint);
             StartCoroutine(FadeLine(line, newRay));
         }
-
-        // Play gun animation
-        if (GunAnimator != null) GunAnimator.SetTrigger("Shoot");
     }
     public int GetMaxAmmo()
     {
@@ -132,7 +129,9 @@ public class Projectile : MonoBehaviour
                 CurrentAmmo = MaxAmmo;
         }
 
-        if ((Input.GetButton("Fire1") && controlled) || (!controlled && firing))
+        bool Shooting = (Input.GetButton("Fire1") && controlled) || (!controlled && firing);
+
+        if (Shooting)
         {
             if ((Time.time - LastShotTime >= Cooldown) && CurrentAmmo > 0)
             {
@@ -145,5 +144,8 @@ public class Projectile : MonoBehaviour
                     FireRay();
             }
         }
+
+        // Play gun animation
+        if (GunAnimator != null) GunAnimator.SetBool("Shoot", Shooting);
     }
 }

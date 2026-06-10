@@ -316,7 +316,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SpeedForce: 1.5
-  TurnAngle: 30
+  TurnAngle: 45
   BrakeForce: 50
   steerSpeed: 8
   steerReturnSpeed: 8
@@ -329,8 +329,8 @@ MonoBehaviour:
   wheelFrictionStiffness: 0
   flipTorqueStrength: 1.5
   flipDamping: 10
-  CamConfigs: []
-  CineCamera: {fileID: 0}
+  downforceStrength: 36
+  downforceMaxSpeed: 36
   _gears:
   - maxSpeed: 3
     torqueMultiplier: 1.6
@@ -347,6 +347,8 @@ MonoBehaviour:
     torqueMultiplier: 0.6
   shiftUpBuffer: 0.95
   shiftDownBuffer: 0.6
+  CamConfigs: []
+  CineCamera: {fileID: 0}
   groundCheckPoint: {fileID: 8711213245533137626}
   groundCheckRadius: 0.2
   groundLayer:

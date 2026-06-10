@@ -58,15 +58,9 @@ public class CarController : MonoBehaviour
     [SerializeField] private float flipTorqueStrength = 5f;
     [SerializeField] private float flipDamping = 2f;
 
-    [Header("Camera Settings")]
-    [SerializeField]
-    private CamConfig[] CamConfigs = new CamConfig[]
-    {
-        new CamConfig { CamPositionObject = null, FOV = 60f }, // default
-    };
-    [SerializeField] private CinemachineCamera CineCamera;
-
-    private int currentCamIndex = 0;
+    [Header("Downforce Settings")]
+    [SerializeField] private float downforceStrength = 2f;  // tune this
+    [SerializeField] private float downforceMaxSpeed = 44f; // usually matches top speed
 
     [Header("Gear Settings")]
     [SerializeField]
@@ -85,8 +79,17 @@ public class CarController : MonoBehaviour
 
     [SerializeField] private float shiftUpBuffer = 0.95f;   // shift at 95% of gear's max
     [SerializeField] private float shiftDownBuffer = 0.6f;  // drop back at 60%
-
     public int CurrentGear { get; private set; } = 0;
+
+    [Header("Camera Settings")]
+    [SerializeField]
+    private CamConfig[] CamConfigs = new CamConfig[]
+    {
+        new CamConfig { CamPositionObject = null, FOV = 60f }, // default
+    };
+    [SerializeField] private CinemachineCamera CineCamera;
+
+    private int currentCamIndex = 0;
 
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint;
@@ -129,11 +132,21 @@ public class CarController : MonoBehaviour
         CarBody.maxAngularVelocity = 20f;
         controlled = transform.tag == "Player";
 
+        Transform Wheels = transform.Find("Wheels");
+        print(Wheels);
+
         wheels = new WheelCollider[4];
-        wheels[0] = transform.Find("RBwheel").GetComponent<WheelCollider>();
-        wheels[1] = transform.Find("LBwheel").GetComponent<WheelCollider>();
-        wheels[2] = transform.Find("RFwheel").GetComponent<WheelCollider>();
-        wheels[3] = transform.Find("LFwheel").GetComponent<WheelCollider>();
+        wheels[0] = Wheels.Find("RBwheel").GetComponent<WheelCollider>();
+        wheels[1] = Wheels.Find("LBwheel").GetComponent<WheelCollider>();
+        wheels[2] = Wheels.Find("RFwheel").GetComponent<WheelCollider>();
+        wheels[3] = Wheels.Find("LFwheel").GetComponent<WheelCollider>();
+
+        Collider bodyCollider = CarBody.transform.Find("body").GetComponent<Collider>();
+
+        foreach (var wheel in wheels)
+        {
+            Physics.IgnoreCollision(wheel, bodyCollider);
+        }
 
         CurrentNitrous = NitrousCapacity;
         //SetWheelFriction();
@@ -186,12 +199,22 @@ public class CarController : MonoBehaviour
 
         Turn();
         BalanceGyro();
+        ApplyDownforce();
     }
 
     // -------------------------------------------------------------------------
     // Movement
     // -------------------------------------------------------------------------
+    void ApplyDownforce()
+    {
+        float speed = GetSpeed();
+        float speedFraction = Mathf.Clamp01(speed / downforceMaxSpeed);
 
+        // Quadratic — downforce grows with the square of speed, like real aerodynamics
+        float downforce = downforceStrength * speedFraction * speedFraction;
+
+        CarBody.AddForce(-transform.up * downforce, ForceMode.Acceleration);
+    }
     public void Move()
     {
         float speed = RemoveY(CarBody.linearVelocity).magnitude;
@@ -321,6 +344,12 @@ public class CarController : MonoBehaviour
     void SetWheel()
     {
         float dot = Vector3.Dot(transform.forward, CarBody.linearVelocity.normalized);
+        float speed = RemoveY(CarBody.linearVelocity).magnitude;
+
+        // Reduce steering angle at high speed — more realistic, prevents spinouts
+        float speedFraction = Mathf.Clamp01(speed / GetTopSpeed());
+        float steerLimit = Mathf.Lerp(1f, highSpeedSteerScale, speedFraction);
+        float targetSteer = TurnInput * TurnAngle * steerLimit;
 
         for (int i = 0; i < wheels.Length; i++)
         {
@@ -332,11 +361,9 @@ public class CarController : MonoBehaviour
 
             Quaternion wheelRotation = rot;
 
-            if (i > 1)
-                wheelRotation = Quaternion.Euler(0, currentSteerAngle * Mathf.RoundToInt(dot), 0) * wheelRotation;
+            if (i > 1) wheelRotation = Quaternion.Euler(0, targetSteer, 0) * wheelRotation;
 
-            if (i % 2 != 0)
-                wheelRotation *= Quaternion.Euler(0, 180, 0);
+            if (i % 2 != 0) wheelRotation *= Quaternion.Euler(0, 180, 0);
 
             wheelMesh.transform.rotation = wheelRotation;
         }
