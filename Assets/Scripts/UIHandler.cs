@@ -203,7 +203,7 @@ public class UIHandler : MonoBehaviour
         Vector3 targetPoint = Physics.Raycast(ray, out RaycastHit hit, 100f) ? hit.point : ray.GetPoint(100f);
         Vector3 screenPos = Camera.main.WorldToScreenPoint(targetPoint);
 
-        CrosshairRect.position = LerpPos(CrosshairRect.position, screenPos, 0.1f);
+        CrosshairRect.position = LerpPos(CrosshairRect.position, screenPos, 10f * Time.deltaTime);
     }
     void CreateMarkers()
     {

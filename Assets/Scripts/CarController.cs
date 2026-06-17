@@ -133,7 +133,6 @@ public class CarController : MonoBehaviour
         controlled = transform.tag == "Player";
 
         Transform Wheels = transform.Find("Wheels");
-        print(Wheels);
 
         wheels = new WheelCollider[4];
         wheels[0] = Wheels.Find("RBwheel").GetComponent<WheelCollider>();
@@ -142,9 +141,11 @@ public class CarController : MonoBehaviour
         wheels[3] = Wheels.Find("LFwheel").GetComponent<WheelCollider>();
 
         Collider bodyCollider = CarBody.transform.Find("body").GetComponent<Collider>();
+        int carBodyLayer = LayerMask.NameToLayer("Mesh");
 
         foreach (var wheel in wheels)
         {
+            wheel.excludeLayers = 1 << carBodyLayer;
             Physics.IgnoreCollision(wheel, bodyCollider);
         }
 
@@ -194,7 +195,7 @@ public class CarController : MonoBehaviour
         if (isGrounded)
         {
             Move();
-            if (MoveInput > 0 && BrakeInput) Brake();
+            if (BrakeInput) Brake();
         }
 
         Turn();
@@ -210,7 +211,7 @@ public class CarController : MonoBehaviour
         float speed = GetSpeed();
         float speedFraction = Mathf.Clamp01(speed / downforceMaxSpeed);
 
-        // Quadratic — downforce grows with the square of speed, like real aerodynamics
+        // Quadratic - downforce grows with the square of speed, like real aerodynamics
         float downforce = downforceStrength * speedFraction * speedFraction;
 
         CarBody.AddForce(-transform.up * downforce, ForceMode.Acceleration);
@@ -245,11 +246,13 @@ public class CarController : MonoBehaviour
         float baseForce = gear.maxSpeed * gear.torqueMultiplier;
         float driveForce = baseForce * SpeedForce * forceFade;
 
-        // Nitrous is additive — bypasses forceFade so it pushes past the gear cap
+        // Nitrous is additive - bypasses forceFade so it pushes past the gear cap
         float totalForce = driveForce + (MoveInput > 0 ? CalculatedNitroForce : 0f);
 
         float torque = MoveInput * totalForce;
         Vector3 MoveForce = Vector3.forward * MoveInput * totalForce;
+
+        if (BrakeInput) return;
 
         wheels[0].motorTorque = torque;
         wheels[1].motorTorque = torque;
@@ -283,8 +286,17 @@ public class CarController : MonoBehaviour
     }
     public void Brake()
     {
-        if (CarBody.linearVelocity.z != 0)
-            CarBody.AddRelativeForce(-Vector3.forward * BrakeForce);
+        // Check velocity in the car's own local space, not world space
+        float forwardSpeed = transform.InverseTransformDirection(CarBody.linearVelocity).z;
+
+        if (Mathf.Abs(forwardSpeed) < 0.01f) return; // already stopped, nothing to do
+
+        // Don't apply more force than needed to bring speed to exactly zero this frame
+        float maxBrakeForce = Mathf.Abs(forwardSpeed) * CarBody.mass / Time.fixedDeltaTime;
+        float appliedForce = Mathf.Min(BrakeForce, maxBrakeForce);
+
+        float brakeDir = Mathf.Sign(forwardSpeed); // brake opposes current direction of travel
+        CarBody.AddRelativeForce(-Vector3.forward * brakeDir * appliedForce);
 
         //BrakeEffect.SetActive(true);
     }
@@ -325,7 +337,7 @@ public class CarController : MonoBehaviour
     // -------------------------------------------------------------------------
     // Misc
     // -------------------------------------------------------------------------
-
+    
     void BalanceGyro()
     {
         Quaternion targetRotation = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, 0f);
@@ -341,6 +353,7 @@ public class CarController : MonoBehaviour
 
         CarBody.AddTorque(correctiveTorque + dampingTorque);
     }
+    
     void SetWheel()
     {
         float dot = Vector3.Dot(transform.forward, CarBody.linearVelocity.normalized);

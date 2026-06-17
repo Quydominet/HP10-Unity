@@ -119,7 +119,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   MaxHealth: 100
-  Collider: {fileID: 3913989921594438785}
+  Collider: {fileID: 0}
   SpawnPicker: {fileID: 0}
 --- !u!114 &2769065130423043105
 MonoBehaviour:
@@ -629,8 +629,8 @@ WheelCollider:
   m_SuspensionSpring:
     spring: 67
     damper: 10
-    targetPosition: 0.47
-  m_SuspensionDistance: 0.3
+    targetPosition: 0.36
+  m_SuspensionDistance: 0.32
   m_ForceAppPointDistance: 0
   m_Mass: 1
   m_WheelDampingRate: 0.25
@@ -648,11 +648,11 @@ WheelCollider:
     m_Stiffness: 1
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 8
-  m_LayerOverridePriority: 0
+  m_LayerOverridePriority: 1
   m_Enabled: 1
   m_ProvidesContacts: 0
 --- !u!1 &2305812712867789010
@@ -701,8 +701,8 @@ WheelCollider:
   m_SuspensionSpring:
     spring: 67
     damper: 10
-    targetPosition: 0.47
-  m_SuspensionDistance: 0.3
+    targetPosition: 0.36
+  m_SuspensionDistance: 0.32
   m_ForceAppPointDistance: 0
   m_Mass: 1
   m_WheelDampingRate: 0.25
@@ -720,11 +720,11 @@ WheelCollider:
     m_Stiffness: 1
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 8
-  m_LayerOverridePriority: 0
+  m_LayerOverridePriority: 1
   m_Enabled: 1
   m_ProvidesContacts: 0
 --- !u!1 &2465844827423636379
@@ -804,8 +804,8 @@ WheelCollider:
   m_SuspensionSpring:
     spring: 67
     damper: 10
-    targetPosition: 0.47
-  m_SuspensionDistance: 0.3
+    targetPosition: 0.36
+  m_SuspensionDistance: 0.32
   m_ForceAppPointDistance: 0
   m_Mass: 1
   m_WheelDampingRate: 0.25
@@ -823,11 +823,11 @@ WheelCollider:
     m_Stiffness: 1
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 8
-  m_LayerOverridePriority: 0
+  m_LayerOverridePriority: 1
   m_Enabled: 1
   m_ProvidesContacts: 0
 --- !u!1 &3245654187165061305
@@ -1194,7 +1194,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1791550656517032005}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Wheels
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1264,8 +1264,12 @@ GameObject:
   - component: {fileID: 2428714483421054739}
   - component: {fileID: 7790020253374072628}
   - component: {fileID: 3347150374187990346}
-  - component: {fileID: 3913989921594438785}
   - component: {fileID: 460099837553416182}
+  - component: {fileID: 6949425735635401978}
+  - component: {fileID: 442616843769170627}
+  - component: {fileID: 5396413410542041709}
+  - component: {fileID: 7597563006269299184}
+  - component: {fileID: 2750008516506613974}
   m_Layer: 3
   m_Name: body
   m_TagString: Untagged
@@ -1351,28 +1355,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3913989921594438785
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3893052493529345351}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 55
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 8
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 1
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -8545447256379345787, guid: 8aa4aab3629472e4c863d82d78c00ec9, type: 3}
 --- !u!114 &460099837553416182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1390,6 +1372,111 @@ MonoBehaviour:
   dentRadius: 0.5
   accumulateDamage: 1
   onImpact: 1
+--- !u!65 &6949425735635401978
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3893052493529345351}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.1999999, y: 0.25, z: 0.605}
+  m_Center: {x: 0, y: 0.12, z: -0.135}
+--- !u!65 &442616843769170627
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3893052493529345351}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.7, y: 0.57, z: 0.35}
+  m_Center: {x: 0, y: 0.28, z: -1.1}
+--- !u!65 &5396413410542041709
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3893052493529345351}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.1999999, y: 0.2, z: 0.32}
+  m_Center: {x: 0, y: 0.1, z: 1.12}
+--- !u!65 &7597563006269299184
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3893052493529345351}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.45, y: 0.19, z: 0.83}
+  m_Center: {x: 0, y: 0.5, z: -0.32}
+--- !u!65 &2750008516506613974
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3893052493529345351}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.7, y: 0.39, z: 2.5597718}
+  m_Center: {x: 0, y: 0.22, z: 0}
 --- !u!1 &3926200172261483678
 GameObject:
   m_ObjectHideFlags: 0
@@ -2255,8 +2342,8 @@ WheelCollider:
   m_SuspensionSpring:
     spring: 67
     damper: 10
-    targetPosition: 0.47
-  m_SuspensionDistance: 0.3
+    targetPosition: 0.36
+  m_SuspensionDistance: 0.32
   m_ForceAppPointDistance: 0
   m_Mass: 1
   m_WheelDampingRate: 0.25
@@ -2274,11 +2361,11 @@ WheelCollider:
     m_Stiffness: 1
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 8
-  m_LayerOverridePriority: 0
+  m_LayerOverridePriority: 1
   m_Enabled: 1
   m_ProvidesContacts: 0
 --- !u!1 &7331889756147528773
