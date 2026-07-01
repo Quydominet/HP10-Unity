@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +30,15 @@ public class UIHandler : MonoBehaviour
     public Transform[] targets;         // World objects to track
     public RectTransform blipPrefab;    // Prefab for blip icon
     private RectTransform[] blips;      // Instantiated blips
+
+    [Header("Ammo Belt Effect")]
+    [SerializeField] private float shrinkSpeed = 50f;
+    [SerializeField] private float cellWidth = 8.67f; // match your icon size in the Inspector
+
+    private List<Vector2> iconBasePositions = new List<Vector2>();
+    private List<Image> ammoIcons = new List<Image>();
+    private List<LayoutElement> ammoLayouts = new List<LayoutElement>(); // missing declaration
+    private int lastBuiltMaxAmmo = -1;
 
     // Status Frame
     private Transform StatusFrame;
@@ -69,7 +79,6 @@ public class UIHandler : MonoBehaviour
     private CarController car;
 
     Vector3 LerpPos(Vector3 start, Vector3 end, float t) => start + (end - start) * t;
-
     private IEnumerator FlashImage(Image img)
     {
         Color original = img.color;
@@ -80,14 +89,12 @@ public class UIHandler : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         img.color = original;
     }
-
     public void FlashInfiniteAmmoIcon()
     {
         if (AmmoContainer.childCount <= 1) return;
         Image firstImage = AmmoContainer.GetChild(0).GetComponent<Image>();
         StartCoroutine(FlashImage(firstImage));
     }
-
     void UpdateHealth()
     {
         float healthPercent = HealthScript.GetHealth() / HealthScript.GetMaxHealth();
@@ -104,7 +111,6 @@ public class UIHandler : MonoBehaviour
             healthPercent
         );
     }
-
     void UpdateBlip(Transform target, RectTransform blip)
     {
         Vector3 offset = target.position - PlayerRoot.position;
@@ -114,7 +120,6 @@ public class UIHandler : MonoBehaviour
 
         blip.anchoredPosition = new Vector2(rotatedOffset.x, rotatedOffset.z) / radarRange * (radarSize / 2f);
     }
-
     void UpdateRadar()
     {
         for (int i = 0; i < targets.Length; i++)
@@ -129,54 +134,110 @@ public class UIHandler : MonoBehaviour
             UpdateBlip(targets[i], blips[i]);
         }
     }
+    private IEnumerator DeferredSetActive(GameObject obj, bool state)
+    {
+        yield return null; // wait one frame for layout to finish
+        if (obj != null) obj.SetActive(state);
+    }
+    void RebuildAmmoIcons(int maxAmmo)
+    {
+        foreach (Transform child in AmmoContainer)
+            Destroy(child.gameObject);
 
+        ammoIcons.Clear();
+        ammoLayouts.Clear(); // clear this too
+        iconBasePositions.Clear();
+
+        int iconsToCreate = maxAmmo == int.MaxValue ? 1 : maxAmmo;
+
+        for (int i = 0; i < iconsToCreate; i++)
+        {
+            RectTransform icon = Instantiate(AmmoIconPrefab, AmmoContainer);
+            icon.name = i.ToString();
+
+            LayoutElement le = icon.gameObject.GetComponent<LayoutElement>();
+            if (le == null) le = icon.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = cellWidth;
+            le.minWidth = 0f;
+
+            ammoIcons.Add(icon.GetComponent<Image>());
+            ammoLayouts.Add(le); // cache it
+            iconBasePositions.Add(icon.anchoredPosition);
+        }
+    }
     void UpdateAmmo()
     {
         if (DisplayedWeapon == null) return;
-
         int currentAmmo = DisplayedWeapon.GetAmmo();
         int maxAmmo = DisplayedWeapon.GetMaxAmmo();
 
-        // Rebuild icons if count changed
-        if (maxAmmo != AmmoContainer.childCount)
+        if (maxAmmo != lastBuiltMaxAmmo)
         {
-            foreach (Transform child in AmmoContainer)
-                Destroy(child.gameObject);
+            RebuildAmmoIcons(maxAmmo);
+            lastBuiltMaxAmmo = maxAmmo;
 
-            if (maxAmmo == int.MaxValue)
+            for (int i = 0; i < ammoIcons.Count; i++)
             {
-                // Single infinite-ammo icon
-                Instantiate(AmmoIconPrefab, AmmoContainer).name = "0";
+                ammoIcons[i].rectTransform.anchoredPosition = iconBasePositions[i];
+                ammoIcons[i].rectTransform.localScale = Vector3.one;
+                Color c = ammoIcons[i].color;
+                c.a = i < currentAmmo ? 1f : 0f;
+                ammoIcons[i].color = c;
+            }
+        }
+
+        if (maxAmmo == int.MaxValue) return;
+
+        int totalConsumed = maxAmmo - currentAmmo;
+
+        for (int i = 0; i < ammoIcons.Count; i++)
+        {
+            int targetSlot = i - totalConsumed;
+            RectTransform rt = ammoIcons[i].rectTransform;
+            LayoutElement le = ammoIcons[i].GetComponent<LayoutElement>(); // fetch per icon
+            Color c = ammoIcons[i].color;
+
+            if (targetSlot < 0)
+            {
+                rt.localScale = Vector3.Lerp(rt.localScale, Vector3.zero, shrinkSpeed * Time.deltaTime);
+                if (le != null) le.preferredWidth = Mathf.Lerp(le.preferredWidth, 0f, shrinkSpeed * Time.deltaTime);
+                c.a = Mathf.Lerp(c.a, 0f, shrinkSpeed * Time.deltaTime);
+
+                if (rt.localScale.x < 0.3f)
+                {
+                    rt.localScale = Vector3.zero;
+                    if (le != null) le.preferredWidth = 0f;
+                    c.a = 0f;
+                    if (rt.gameObject.activeSelf)
+                        StartCoroutine(DeferredSetActive(rt.gameObject, false));
+                }
             }
             else
             {
-                for (int i = 0; i < maxAmmo; i++)
-                    Instantiate(AmmoIconPrefab, AmmoContainer).name = i.ToString();
-            }
-        }
-        else if (maxAmmo != int.MaxValue)
-        {
-            // Update icon visibility
-            for (int i = 0; i < maxAmmo; i++)
-            {
-                Transform ammoObject = AmmoContainer.Find(i.ToString());
-                if (ammoObject == null) continue;
+                if (!rt.gameObject.activeSelf)
+                    StartCoroutine(DeferredSetActive(rt.gameObject, true));
 
-                Image ammoImage = ammoObject.GetComponent<Image>();
-                Color c = ammoImage.color;
-                c.a = i < currentAmmo ? 1f : 0f;
-                ammoImage.color = c;
+                rt.localScale = Vector3.Lerp(rt.localScale, Vector3.one, shrinkSpeed * Time.deltaTime);
+                if (le != null) le.preferredWidth = Mathf.Lerp(le.preferredWidth, cellWidth, shrinkSpeed * Time.deltaTime);
+                c.a = Mathf.Lerp(c.a, 1f, shrinkSpeed * Time.deltaTime);
+
+                if (rt.localScale.x > 0.99f)
+                {
+                    rt.localScale = Vector3.one;
+                    if (le != null) le.preferredWidth = cellWidth;
+                    c.a = 1f;
+                }
             }
+
+            ammoIcons[i].color = c;
         }
     }
-
     void UpdateNitro()
     {
         if (car == null) return;
         float nitroPercent = car.CurrentNitrous / car.NitrousCapacity;
         NitroBarRect.localScale = new Vector3(nitroPercent, 1f, 1f);
     }
-
     void UpdateSpeed()
     {
         if (car == null || SpeedText == null) return;
@@ -271,14 +332,12 @@ public class UIHandler : MonoBehaviour
         if (PointText == null) return;
         PointText.text = "Points: " + CurrentPoint;
     }
-
     void RenewBlips()
     {
         blips = new RectTransform[targets.Length];
         for (int i = 0; i < targets.Length; i++)
             blips[i] = Instantiate(blipPrefab, BlipContainer);
     }
-
     void Awake()
     {
         // Cache car
@@ -322,7 +381,6 @@ public class UIHandler : MonoBehaviour
 
         RenewBlips();
     }
-
     void Start()
     {
         // All Awakes are done — safe to read from other components
@@ -330,7 +388,6 @@ public class UIHandler : MonoBehaviour
         UpdatePoints();
         CreateMarkers();
     }
-
     void Update()
     {
         UpdateNitro();
@@ -339,12 +396,10 @@ public class UIHandler : MonoBehaviour
         UpdateSpeed();
         UpdateCrosshair();
     }
-
     void NPCDeath()
     {
         CurrentPoint += 5;
         UpdatePoints();
     }
-
     void HealthChange() => UpdateHealth();
 }
