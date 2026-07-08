@@ -205,7 +205,10 @@ public class Projectile : MonoBehaviour
         }
 
         // Play gun animation
-        if (GunAnimator != null) GunAnimator.SetBool("Shoot", Shooting);
-        GunAnimator.speed = GunAnimator.GetCurrentAnimatorClipInfo(0).Length / Cooldown;
+        if (GunAnimator != null)
+        {
+            GunAnimator.SetBool("Shoot", Shooting);
+            GunAnimator.speed = GunAnimator.GetCurrentAnimatorClipInfo(0).Length / Cooldown;
+        }
     }
 }

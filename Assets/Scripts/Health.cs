@@ -32,11 +32,12 @@ public class Health : MonoBehaviour
         BroadcastMessage("HealthChange", SendMessageOptions.DontRequireReceiver);
 
         CarController Car = GetComponent<CarController>();
-        Projectile Gun = GetComponent<Projectile>();
         CarNPC NPC = GetComponent<CarNPC>();
 
+        foreach (Projectile r in GetComponentsInChildren<Projectile>(true))
+            r.enabled = true;
+
         if (Car) Car.enabled = true;
-        if (Gun) Gun.enabled = true;
         if (NPC) NPC.enabled = true;
 
         ExplosionEffect?.RemoveExplosion();
@@ -51,17 +52,14 @@ public class Health : MonoBehaviour
         Projectile Gun = GetComponent<Projectile>();
         CarNPC NPC = GetComponent<CarNPC>();
 
+        foreach (Projectile r in GetComponentsInChildren<Projectile>(true))
+            r.enabled = false;
+
         if (Car)
         {
             Car.MoveInput = 0f;
             Car.TurnInput = 0f;
             Car.enabled = false;
-        }
-
-        if (Gun)
-        {
-            Gun.firing = false;
-            Gun.enabled = false;
         }
 
         if (NPC)

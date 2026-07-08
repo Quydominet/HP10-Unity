@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -378,14 +379,21 @@ public class UIHandler : MonoBehaviour
         // Crosshair
         Crosshair = PlayerUI.transform.Find("Crosshair");
         CrosshairRect = Crosshair.GetComponent<RectTransform>();
-
-        RenewBlips();
     }
     void Start()
     {
+        foreach (CarController vehicle in FindObjectsByType<CarController>(FindObjectsSortMode.None))
+        {
+            if (vehicle != car)
+            {
+                targets = targets.Append(vehicle.transform).ToArray();
+            }
+        }
+
         // All Awakes are done — safe to read from other components
         UpdateHealth();
         UpdatePoints();
+        RenewBlips();
         CreateMarkers();
     }
     void Update()
