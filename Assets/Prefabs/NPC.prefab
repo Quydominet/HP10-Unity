@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7346873303840809574}
+  - component: {fileID: 3216149395137588645}
   m_Layer: 3
   m_Name: BarrelEnd
   m_TagString: Untagged
@@ -31,6 +32,103 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7865558936058785189}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &3216149395137588645
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3484007868937636}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 0.586
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 221
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1270234987248601190
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,7 +396,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   MaxHealth: 100
-  Collider: {fileID: 0}
+  Collider: {fileID: 2977574263375104026}
   SpawnPicker: {fileID: 0}
 --- !u!114 &457985023034516886
 MonoBehaviour:
@@ -369,9 +467,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b299608ac3f23b3478716f5cf49a9aad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  flankRadius: 12
+  flankSlotAngleBuffer: 45
   target: {fileID: 0}
   stopDistance: 10
   moveSensitivity: 1
+  minThrottle: 0.35
   steerSensitivity: 1.5
   reverseAngleThreshold: 110
   lookAheadMinDist: 3
@@ -380,13 +481,16 @@ MonoBehaviour:
   cornerBrakeLookAhead: 2
   cornerBrakeStrength: 0.5
   hardBrakeThreshold: 0.5
+  highSpeedSteerPenalty: 0.15
   nitrousMinAlignment: 0.85
   nitrousMinDistance: 20
+  nitrousCornerSafety: 0.6
   fireAngle: 30
   projectileSpeed: 20
   stuckCheckInterval: 1.5
   stuckSpeedThreshold: 1
   recoveryDuration: 1.5
+  stuckStrikesRequired: 2
 --- !u!114 &2018017605155291827
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -417,12 +521,16 @@ MonoBehaviour:
   RayObject: {fileID: 3187255057432103852, guid: e73c59ecbf9fc1f48b4b25a042a3a2f8, type: 3}
   GunAnimator: {fileID: 0}
   BarrelPos: {fileID: 7346873303840809574}
-  Damage: 1
-  Cooldown: 0.01
+  SoundEmitter: {fileID: 3216149395137588645}
+  FireSound: {fileID: 8300000, guid: 5d7e1d85f7399074db0145fda3c5019c, type: 3}
+  ReloadSound: {fileID: 0}
+  Damage: 5
+  Cooldown: 0.1
   Range: 100
   SpreadAngle: 5
   MaxAmmo: 2147483647
   ReloadTime: 1
+  TrailLength: 0.3
   firing: 0
 --- !u!1 &2646847120668068617
 GameObject:

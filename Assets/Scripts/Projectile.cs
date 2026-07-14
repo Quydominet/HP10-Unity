@@ -136,7 +136,7 @@ public class Projectile : MonoBehaviour
             Health health = hitInfo.transform.GetComponent<Health>();
             MeshDamageAPI damage = hitInfo.transform.GetComponent<MeshDamageAPI>();
 
-            if (health != null) health.TakeDamage(gameObject, Damage);
+            if (health != null && gameObject.tag != health.gameObject.tag) health.TakeDamage(gameObject, Damage);
             if (damage != null) damage.ApplyDent(hitInfo.point, hitInfo.normal, Damage);
         }
 

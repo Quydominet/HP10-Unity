@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIHandler : MonoBehaviour
@@ -98,7 +100,9 @@ public class UIHandler : MonoBehaviour
     }
     void UpdateHealth()
     {
-        float healthPercent = HealthScript.GetHealth() / HealthScript.GetMaxHealth();
+        float Health = HealthScript.GetHealth();
+        float MaxHealth = HealthScript.GetMaxHealth();
+        float healthPercent = Health / MaxHealth;
 
         HealthBarRect.localScale = new Vector3(healthPercent, 1f, 1f);
         HealthBarImage.color = Color.Lerp(
@@ -111,6 +115,18 @@ public class UIHandler : MonoBehaviour
             new Color(37f / 255f, 71f / 255f, 38f / 255f),     // green
             healthPercent
         );
+
+        if (Health <= 0)
+        {
+            Task.Delay(1000).ContinueWith(_ =>
+            {
+                CurrentPoint = 0;
+                UpdatePoints();
+            });
+
+            if (PointText == null) return;
+            PointText.text = "Restarting";
+        }
     }
     void UpdateBlip(Transform target, RectTransform blip)
     {
@@ -331,7 +347,7 @@ public class UIHandler : MonoBehaviour
     void UpdatePoints()
     {
         if (PointText == null) return;
-        PointText.text = "Points: " + CurrentPoint;
+        PointText.text = "Points: " + CurrentPoint + "/100";
     }
     void RenewBlips()
     {
@@ -408,6 +424,18 @@ public class UIHandler : MonoBehaviour
     {
         CurrentPoint += 5;
         UpdatePoints();
+
+        if (CurrentPoint >= 100)
+        {
+            if (PointText == null) return;
+            PointText.text =  "You Win!!!!!!";
+
+            car.enabled = false;
+            car.gameObject.GetComponent<Health>().enabled = false;
+            foreach (Projectile gun in car.gameObject.GetComponents<Projectile>()) gun.enabled = false;
+
+            SceneManager.LoadSceneAsync(0);
+        }
     }
     void HealthChange() => UpdateHealth();
 }

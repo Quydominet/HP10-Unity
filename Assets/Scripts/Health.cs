@@ -71,7 +71,7 @@ public class Health : MonoBehaviour
         {
             GameObject player = GameObject.FindWithTag("Player");
 
-            if (gameObject.CompareTag("NPC")) player.SendMessage("NPCDeath", SendMessageOptions.DontRequireReceiver);
+            if (player) player.SendMessage("NPCDeath", SendMessageOptions.DontRequireReceiver);
         }
 
         Invoke(nameof(Respawn), 5f);
