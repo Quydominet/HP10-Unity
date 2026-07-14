@@ -1,37 +1,98 @@
+using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Splines.Interpolators;
+
+[System.Serializable]
+public class Gear
+{
+    [Tooltip("Top speed for this gear in m/s, x3.6 for km/h")]
+    public float maxSpeed;
+    [Tooltip("Force multiplier while in this gear")]
+    public float torqueMultiplier;
+}
+
+[System.Serializable]
+public class CamConfig
+{
+    [Tooltip("The part where the camera is placed")]
+    public Transform CamPositionObject;
+    [Tooltip("Field of view")]
+    public float FOV;
+}
 
 public class CarController : MonoBehaviour
 {
     [Header("Car Settings")]
-    public float SpeedForce = 100f;
-    readonly public float NitrousForce = 10f;
-    readonly public float NitrousCapacity = 5f;
+    public float SpeedForce = 1f;   // Acceleration rate only — tune between 0.5 and 3.0
+    public float TurnAngle = 20f;
+    public float BrakeForce = 50f;
+
+    [Header("Steering Settings")]
+    [SerializeField] private float steerSpeed = 5f;          // how fast the wheel turns
+    [SerializeField] private float steerReturnSpeed = 8f;    // how fast it re-centers
+    [SerializeField] private float highSpeedSteerScale = 0.4f; // turn reduction at top speed
+    [SerializeField] private float gripStrength = 6f;        // lateral friction / anti-drift
+
+    private float currentSteerAngle = 0f;
 
     [Header("Nitrous Settings")]
-    [Tooltip("Maximum number of stacked nitro presses")]
-    readonly public int MaxNitrousStage = 4;
-    [Tooltip("Additional force per extra stage (e.g. 0.5 = +50% per stage)")]
-    readonly public float NitrousStageMultiplier = 0.25f;
-
-    [SerializeField] private float TurnAngle = 20f;
-    [SerializeField] private float BrakeForce = 50f;
-    [SerializeField] private GameObject BrakeEffect;
-
-    [Header("Wheel Settings")]
-    [SerializeField] private float wheelFrictionStiffness = 2f;
-
-    public float CurrentNitrous;
-
-    private int CurrentNitrousStage = 0;
+    public float NitrousForce = 10f;
+    public float NitrousCapacity = 5f;
+    public float CurrentNitrous { get; private set; }
+    public int CurrentNitrousStage { get; private set; } = 0;
     private float CalculatedNitroForce;
     private bool NitrousActive = false;
+
+    [Tooltip("Maximum number of stacked nitro presses")]
+    public int MaxNitrousStage = 4;
+
+    [Tooltip("Additional force per extra stage (e.g. 0.5 = +50% per stage)")]
+    public float NitrousStageMultiplier = 0.25f;
+
+    [Header("Wheel Settings")]
+    public float wheelFrictionStiffness = 2f;
+    private GameObject BrakeEffect;
 
     [Header("Balance Settings")]
     [SerializeField] private float flipTorqueStrength = 5f;
     [SerializeField] private float flipDamping = 2f;
 
+    [Header("Downforce Settings")]
+    [SerializeField] private float downforceStrength = 2f;  // tune this
+    [SerializeField] private float downforceMaxSpeed = 44f; // usually matches top speed
+
+    [Header("Gear Settings")]
+    [SerializeField]
+    private Gear[] _gears = new Gear[]
+    {
+        new Gear { maxSpeed = 8f,  torqueMultiplier = 1.6f  },  // 1st
+        new Gear { maxSpeed = 14f, torqueMultiplier = 1.34f },  // 2nd
+        new Gear { maxSpeed = 29f, torqueMultiplier = 1.2f  },  // 3rd
+        new Gear { maxSpeed = 37f, torqueMultiplier = 1.0f  },  // 4th
+        new Gear { maxSpeed = 44f, torqueMultiplier = 0.87f },  // 5th
+    };
+    [SerializeField] private Gear _reverseGear = new Gear { maxSpeed = 8f, torqueMultiplier = 0.6f };
+
+    public Gear[] gears => _gears;
+    public Gear reverseGear => _reverseGear;
+
+    [SerializeField] private float shiftUpBuffer = 0.95f;   // shift at 95% of gear's max
+    [SerializeField] private float shiftDownBuffer = 0.6f;  // drop back at 60%
+    public int CurrentGear { get; private set; } = 0;
+
+    [Header("Camera Settings")]
+    [SerializeField]
+    private CamConfig[] CamConfigs = new CamConfig[]
+    {
+        new CamConfig { CamPositionObject = null, FOV = 60f }, // default
+    };
+    [SerializeField] private CinemachineCamera CineCamera;
+
+    private int currentCamIndex = 0;
+
     [Header("Ground Check Settings")]
-    [SerializeField] private Transform groundCheckPoint; // empty GameObject under car
+    [SerializeField] private Transform groundCheckPoint;
     [SerializeField] private float groundCheckRadius = 0.5f;
     [SerializeField] private LayerMask groundLayer;
 
@@ -40,45 +101,60 @@ public class CarController : MonoBehaviour
     [HideInInspector] public bool BrakeInput = false;
     [HideInInspector] public bool NitrousPressed = false;
     [SerializeField] private bool controlled = false;
+    private bool CamChangePressed = false;
 
     WheelCollider[] wheels;
 
     private Rigidbody CarBody;
     public bool isGrounded = false;
 
-    Vector3 RemoveY(Vector3 target)
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    Vector3 RemoveY(Vector3 target) => new Vector3(target.x, 0, target.z);
+
+    public float GetSpeed()
     {
-        return new Vector3(target.x, 0, target.z);
+        if (CarBody == null) return 0f;
+        return RemoveY(CarBody.linearVelocity).magnitude;
     }
+    public float GetTopSpeed() => gears[gears.Length - 1].maxSpeed;
+    public int GetGearCount() => gears.Length;
+
+    // -------------------------------------------------------------------------
+    // Lifecycle
+    // -------------------------------------------------------------------------
 
     void Awake()
     {
         CarBody = GetComponent<Rigidbody>();
         CarBody.maxAngularVelocity = 20f;
-        controlled = (transform.tag == "Player");
+        controlled = transform.tag == "Player";
+
+        Transform Wheels = transform.Find("Wheels");
 
         wheels = new WheelCollider[4];
-        wheels[0] = transform.Find("RBwheel").GetComponent<WheelCollider>();
-        wheels[1] = transform.Find("LBwheel").GetComponent<WheelCollider>();
-        wheels[2] = transform.Find("RFwheel").GetComponent<WheelCollider>();
-        wheels[3] = transform.Find("LFwheel").GetComponent<WheelCollider>();
+        wheels[0] = Wheels.Find("RBwheel").GetComponent<WheelCollider>();
+        wheels[1] = Wheels.Find("LBwheel").GetComponent<WheelCollider>();
+        wheels[2] = Wheels.Find("RFwheel").GetComponent<WheelCollider>();
+        wheels[3] = Wheels.Find("LFwheel").GetComponent<WheelCollider>();
+
+        Collider bodyCollider = CarBody.transform.Find("body").GetComponent<Collider>();
+        int carBodyLayer = LayerMask.NameToLayer("Mesh");
+
+        foreach (var wheel in wheels)
+        {
+            wheel.excludeLayers = 1 << carBodyLayer;
+            Physics.IgnoreCollision(wheel, bodyCollider);
+        }
 
         CurrentNitrous = NitrousCapacity;
         //SetWheelFriction();
-    }
-    void SetWheelFriction()
-    {
-        foreach (var wheel in wheels)
-        {
-            WheelFrictionCurve fwd = wheel.forwardFriction;
-            fwd.stiffness = wheelFrictionStiffness;
-            wheel.forwardFriction = fwd;
 
-            WheelFrictionCurve side = wheel.sidewaysFriction;
-            side.stiffness = wheelFrictionStiffness;
-            wheel.sidewaysFriction = side;
-        }
+        ApplyCamera();
     }
+
     void Update()
     {
         SetWheel();
@@ -89,7 +165,27 @@ public class CarController : MonoBehaviour
         TurnInput = Input.GetAxis("Horizontal");
         BrakeInput = Input.GetKey(KeyCode.Space);
         NitrousPressed = Input.GetKeyDown(KeyCode.LeftShift);
+        CamChangePressed = Input.GetKeyDown(KeyCode.C);
+
+        if (CamChangePressed)
+        {
+            CamChangePressed = false; // Debounce
+
+            currentCamIndex = (currentCamIndex + 1) % CamConfigs.Length;
+            ApplyCamera();
+        }
+
+        if (NitrousPressed && CurrentNitrous > 0f)
+        {
+            NitrousPressed = false; // Debounce
+
+            CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
+            NitrousActive = true;
+        }
+
+        ApplyNitrous();
     }
+
     void FixedUpdate()
     {
         if (!enabled) return;
@@ -99,23 +195,151 @@ public class CarController : MonoBehaviour
         if (isGrounded)
         {
             Move();
-            Turn();
-            if ((MoveInput > 0) && BrakeInput) Brake();
+            if (BrakeInput) Brake();
         }
 
-        if (NitrousPressed && CurrentNitrous > 0f)
-        {
-            CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
-            NitrousActive = true;
-            NitrousPressed = false; // Consume it
-        }
-
-        ApplyNitrous();
+        Turn();
         BalanceGyro();
+        ApplyDownforce();
     }
+
+    // -------------------------------------------------------------------------
+    // Movement
+    // -------------------------------------------------------------------------
+    void ApplyDownforce()
+    {
+        float speed = GetSpeed();
+        float speedFraction = Mathf.Clamp01(speed / downforceMaxSpeed);
+
+        // Quadratic - downforce grows with the square of speed, like real aerodynamics
+        float downforce = downforceStrength * speedFraction * speedFraction;
+
+        CarBody.AddForce(-transform.up * downforce, ForceMode.Acceleration);
+    }
+    public void Move()
+    {
+        float speed = RemoveY(CarBody.linearVelocity).magnitude;
+        bool isReversing = MoveInput < 0;
+
+        Gear gear;
+
+        if (isReversing)
+        {
+            CurrentGear = -1;
+            gear = reverseGear;
+        }
+        else
+        {
+            if (CurrentGear < 0) CurrentGear = 0;
+
+            if (CurrentGear < gears.Length - 1 && speed >= gears[CurrentGear].maxSpeed * shiftUpBuffer)
+                CurrentGear++;
+            else if (CurrentGear > 0 && speed < gears[CurrentGear - 1].maxSpeed * shiftDownBuffer)
+                CurrentGear--;
+
+            gear = gears[CurrentGear];
+        }
+
+        float speedRatio = Mathf.Clamp01(speed / gear.maxSpeed);
+        float forceFade = 1f - Mathf.Pow(speedRatio, 8);
+
+        float baseForce = gear.maxSpeed * gear.torqueMultiplier;
+        float driveForce = baseForce * SpeedForce * forceFade;
+
+        // Nitrous is additive - bypasses forceFade so it pushes past the gear cap
+        float totalForce = driveForce + (MoveInput > 0 ? CalculatedNitroForce : 0f);
+
+        float torque = MoveInput * totalForce;
+        Vector3 MoveForce = Vector3.forward * MoveInput * totalForce;
+
+        if (BrakeInput) return;
+
+        wheels[0].motorTorque = torque;
+        wheels[1].motorTorque = torque;
+        wheels[2].motorTorque = torque;
+        wheels[3].motorTorque = torque;
+
+        CarBody.AddRelativeForce(MoveForce);
+    }
+    public void Turn()
+    {
+        float speed = RemoveY(CarBody.linearVelocity).magnitude;
+
+        // Reduce steering angle at high speed — more realistic, prevents spinouts
+        float speedFraction = Mathf.Clamp01(speed / GetTopSpeed());
+        float steerLimit = Mathf.Lerp(1f, highSpeedSteerScale, speedFraction);
+        float dot = Vector3.Dot(transform.forward, CarBody.linearVelocity);
+        float targetSteer = TurnInput * TurnAngle * steerLimit * (dot < 0 ? -1f : 1f);
+
+        // Smooth the steering input instead of snapping
+        float blendSpeed = TurnInput != 0 ? steerSpeed : steerReturnSpeed;
+        currentSteerAngle = Mathf.Lerp(currentSteerAngle, targetSteer, blendSpeed * Time.fixedDeltaTime);
+
+        // Apply as yaw torque — scaled by actual speed so slow turns feel sluggish
+        float torqueStrength = Mathf.Lerp(0f, 1f, speed / 3f); // fades in from standstill
+        CarBody.AddRelativeTorque(Vector3.up * currentSteerAngle * torqueStrength * (isGrounded ? 1f : 0.45f));
+
+        // Cancel lateral (sideways) velocity — simulates tire grip
+        Vector3 localVelocity = transform.InverseTransformDirection(CarBody.linearVelocity);
+        localVelocity.x = Mathf.Lerp(localVelocity.x, 0f, gripStrength * Time.fixedDeltaTime);
+        CarBody.linearVelocity = transform.TransformDirection(localVelocity);
+    }
+    public void Brake()
+    {
+        // Check velocity in the car's own local space, not world space
+        float forwardSpeed = transform.InverseTransformDirection(CarBody.linearVelocity).z;
+
+        if (Mathf.Abs(forwardSpeed) < 0.01f) return; // already stopped, nothing to do
+
+        // Don't apply more force than needed to bring speed to exactly zero this frame
+        float maxBrakeForce = Mathf.Abs(forwardSpeed) * CarBody.mass / Time.fixedDeltaTime;
+        float appliedForce = Mathf.Min(BrakeForce, maxBrakeForce);
+
+        float brakeDir = Mathf.Sign(forwardSpeed); // brake opposes current direction of travel
+        CarBody.AddRelativeForce(-Vector3.forward * brakeDir * appliedForce);
+
+        //BrakeEffect.SetActive(true);
+    }
+
+    // -------------------------------------------------------------------------
+    // Nitrous
+    // -------------------------------------------------------------------------
+
+    public void ApplyNitrous()
+    {
+        if (!NitrousActive)
+        {
+            CalculatedNitroForce = 0f;
+
+            // Recharge
+            if (CurrentNitrous < NitrousCapacity)
+                CurrentNitrous = Mathf.Min(CurrentNitrous + Time.deltaTime, NitrousCapacity);
+
+            return;
+        }
+
+        float stageMultiplier = 1f + (CurrentNitrousStage - 1) * NitrousStageMultiplier;
+
+        // Additive force boost — scaled by stage, independent of speed
+        CalculatedNitroForce = NitrousForce * stageMultiplier;
+
+        float consumptionThisFrame = (1f + stageMultiplier) * Time.deltaTime;
+        CurrentNitrous = Mathf.Max(0f, CurrentNitrous - consumptionThisFrame);
+
+        if (CurrentNitrous <= 0f)
+        {
+            NitrousActive = false;
+            CurrentNitrousStage = 0;
+            CalculatedNitroForce = 0f;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Misc
+    // -------------------------------------------------------------------------
+    
     void BalanceGyro()
     {
-        //if (isGrounded) return;
         Quaternion targetRotation = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, 0f);
         Quaternion delta = targetRotation * Quaternion.Inverse(transform.rotation);
 
@@ -124,125 +348,44 @@ public class CarController : MonoBehaviour
 
         axis.y = 0f;
 
-        Vector3 correctiveTorque = axis.normalized * angle * flipTorqueStrength;
+        Vector3 correctiveTorque = axis.normalized * angle * flipTorqueStrength * (isGrounded ? 0.5f : 1f);
         Vector3 dampingTorque = -CarBody.angularVelocity * flipDamping;
 
         CarBody.AddTorque(correctiveTorque + dampingTorque);
     }
+    
     void SetWheel()
     {
+        float dot = Vector3.Dot(transform.forward, CarBody.linearVelocity.normalized);
+        float speed = RemoveY(CarBody.linearVelocity).magnitude;
+
+        // Reduce steering angle at high speed — more realistic, prevents spinouts
+        float speedFraction = Mathf.Clamp01(speed / GetTopSpeed());
+        float steerLimit = Mathf.Lerp(1f, highSpeedSteerScale, speedFraction);
+        float targetSteer = TurnInput * TurnAngle * steerLimit;
+
         for (int i = 0; i < wheels.Length; i++)
         {
-            Vector3 pos;
-            Quaternion rot;
-
-            // Visual wheel position/rotation update
-            wheels[i].GetWorldPose(out pos, out rot);
+            wheels[i].GetWorldPose(out Vector3 pos, out Quaternion rot);
 
             GameObject wheelMesh = wheels[i].transform.GetChild(0).gameObject;
             wheelMesh.transform.position = pos;
+            wheelMesh.transform.position -= transform.right * 0.15f * (i % 2 == 0 ? 1f : -1f);
 
             Quaternion wheelRotation = rot;
-            
-            if (i > 1)
-            {
-                Quaternion steerRotation = Quaternion.Euler(0, 20 * TurnInput, 0);
-                wheelRotation = steerRotation * wheelRotation;
-            }
 
-            if (i % 2 != 0)
-            {
-                wheelRotation *= Quaternion.Euler(0, 180, 0);
-            }
+            if (i > 1) wheelRotation = Quaternion.Euler(0, targetSteer, 0) * wheelRotation;
+
+            if (i % 2 != 0) wheelRotation *= Quaternion.Euler(0, 180, 0);
 
             wheelMesh.transform.rotation = wheelRotation;
         }
     }
-    //Public for NPC use
-    public void ApplyNitrous()
+
+    void ApplyCamera()
     {
-        if (!NitrousActive)
-        {
-            if (CurrentNitrous < NitrousCapacity)
-            {
-                CurrentNitrous += Time.deltaTime;
-                CurrentNitrous = Mathf.Min(CurrentNitrous, NitrousCapacity);
-            }
-
-            return;
-        }
-
-        float speed = CarBody.linearVelocity.normalized.magnitude;
-        float stageMultiplier = 1f + (CurrentNitrousStage - 1) * NitrousStageMultiplier;
-
-        CalculatedNitroForce = speed * NitrousForce * stageMultiplier * 0.5f;
-
-        float consumptionThisFrame = (1 + stageMultiplier) * Time.deltaTime;
-        CurrentNitrous = Mathf.Max(0, CurrentNitrous - consumptionThisFrame);
-
-        if (CurrentNitrous <= 0f)
-        {
-            NitrousActive = false;
-            CurrentNitrousStage = 0;
-        }
-    }
-
-    public void Move()
-    {
-        float torque = MoveInput * (SpeedForce + CalculatedNitroForce);
-        Vector3 MoveForce = Vector3.forward * MoveInput * (SpeedForce + CalculatedNitroForce);
-
-        if (MoveInput < 0)
-        {
-            MoveForce *= 0.4f;
-            torque *= 0.4f;
-        }
-
-        //Rear
-        wheels[0].motorTorque = torque;
-        wheels[1].motorTorque = torque;
-        //Front
-        wheels[2].motorTorque = 0f;
-        wheels[3].motorTorque = 0f;
-
-        CarBody.AddRelativeForce(MoveForce);
-        //BrakeEffect.SetActive(false);
-    }
-
-    public void Turn()
-    {
-        /*
-        //Rear
-        wheels[0].steerAngle = 0f;
-        wheels[1].steerAngle = 0f;
-        //Front
-        wheels[2].steerAngle = TurnInput * TurnAngle;
-        wheels[3].steerAngle = TurnInput * TurnAngle;
-        
-        */
-
-        float speed = RemoveY(CarBody.linearVelocity).normalized.magnitude;
-        Vector3 TurnTorque = Vector3.up * TurnInput * TurnAngle;
-
-        //if (speed < 0.01f) return; // No turning when nearly stopped
-
-        CarBody.AddRelativeTorque(TurnTorque);
-
-        Quaternion re = Quaternion.Euler(
-            Vector3.up * TurnInput * speed * TurnAngle * Time.fixedDeltaTime
-        );
-
-        CarBody.MoveRotation(CarBody.rotation * re);
-    }
-
-    public void Brake()
-    {
-        
-        if (CarBody.linearVelocity.z != 0)
-        {
-            CarBody.AddRelativeForce(-Vector3.forward);
-        }
-
-        //BrakeEffect.SetActive(true);
+        if (CineCamera == null || controlled == false || CamConfigs.Length == 0 || CamConfigs[currentCamIndex].CamPositionObject == null) return;
+        CineCamera.Target.TrackingTarget = CamConfigs[currentCamIndex].CamPositionObject;
+        CineCamera.Lens.FieldOfView = CamConfigs[currentCamIndex].FOV;
     }
 }
