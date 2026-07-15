@@ -91,6 +91,12 @@ public class CarController : MonoBehaviour
 
     private int currentCamIndex = 0;
 
+    [Header("Sound Settings")]
+    [SerializeField] private AudioSource source;
+    [SerializeField] private AudioClip idle;
+    [SerializeField] private AudioClip decel;
+    [SerializeField] private AudioClip accel;
+
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint;
     [SerializeField] private float groundCheckRadius = 0.5f;
@@ -181,6 +187,34 @@ public class CarController : MonoBehaviour
 
             CurrentNitrousStage = Mathf.Clamp(CurrentNitrousStage + 1, 1, MaxNitrousStage);
             NitrousActive = true;
+        }
+
+        if (source != null)
+        {
+            if (MoveInput > 0f)
+            {
+                if (source.clip != accel)
+                {
+                    source.clip = accel;
+                    source.Play();
+                }
+            }
+            else if (MoveInput < 0f)
+            {
+                if (source.clip != decel)
+                {
+                    source.clip = decel;
+                    source.Play();
+                }
+            }
+            else
+            {
+                if (source.clip != idle)
+                {
+                    source.clip = idle;
+                    source.Play();
+                }
+            }
         }
 
         ApplyNitrous();
