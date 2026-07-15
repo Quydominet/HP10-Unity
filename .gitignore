@@ -86,3 +86,12 @@ crashlytics-build.properties
 Packages/packages-lock.json
 Packages/packages-lock.json
 Packages/packages-lock.json
+ProjectSettings/ProjectSettings.asset
+ProjectSettings/ProjectSettings.asset
+ProjectSettings/ProjectVersion.txt
+Packages/manifest.json
+Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+/ProjectSettings/ProjectVersion.txt
+Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+*.save
